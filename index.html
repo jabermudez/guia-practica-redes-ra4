@@ -1,178 +1,489 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Guía práctica de subnetting, VLAN, switch y router con bitácora estructurada y pruebas guiadas."><title>Laboratorio de redes · RA 4</title><link rel="stylesheet" href="styles.css?v=2"><script src="app.js?v=2" defer></script></head>
-<body><a class="skip" href="#contenido">Ir al contenido</a><header><span>SENA · Ficha 3399813</span><a href="#bitacora">Revisar mi bitácora ↗</a></header>
-<div class="layout"><aside><p class="eyebrow">GUÍA DE PRÁCTICA</p><nav aria-label="Actividades"><a href="#reto">El proyecto</a><a href="#conceptos">Conceptos</a><a href="#presaberes">Recuerda y predice</a><a href="#subredes">Calcula las subredes</a><a href="#montaje">Monta y direcciona</a><a href="#switch">Configura S1</a><a href="#router">Configura R1</a><a href="#pruebas">Registra las pruebas</a><a href="#diagnostico">Resuelve una falla</a><a href="#real">Práctica con equipos reales</a><a href="#repaso">Comprueba lo aprendido</a><a href="#bitacora">Revisa y descarga</a></nav><div class="save-panel"><p id="save-status" role="status">Tus registros se guardan en este navegador.</p></div></aside><main id="contenido">
-<div class="hero"><p class="eyebrow">CONFIGURACIÓN Y VERIFICACIÓN DE REDES</p><h1>Configuración de una red<br>para dos áreas</h1><p>Construye una red para dos áreas. Recupera los conceptos, registra cada decisión y usa las pruebas para demostrar que funciona.</p><div class="hero-actions"><a class="button" href="#subredes">Empezar el cálculo</a><a href="#conceptos">Repasar conceptos</a></div>
-<div class="network"><div><strong>Administración</strong><span>ADM1 y ADM2 · VLAN 10</span><span>Puertos Fa0/1 y Fa0/2 de S1</span></div><div><strong>Operaciones</strong><span>OPE1 y OPE2 · VLAN 20</span><span>Puertos Fa0/3 y Fa0/4 de S1</span></div><div><strong>S1 Gi0/1 ↔ R1 Gi0/0</strong><span>Troncal de las VLAN 10 y 20</span></div></div></div>
-<section id="reto" class="lesson"><h2>Tu proyecto de práctica</h2>
-<p>Una empresa necesita separar Administración y Operaciones y permitir la comunicación entre ambas áreas. Trabaja con el bloque <strong>192.168.10.0/24</strong>. Administración requiere <strong>50 direcciones utilizables</strong> y Operaciones <strong>25</strong>; esas cantidades incluyen la puerta de enlace.</p>
-<p>Representa la red con cuatro PC, un switch S1 y un router R1. Los cuatro PC son una muestra de los usuarios previstos. Conserva este montaje y sus registros para el proyecto de verificación del RA 4.</p>
-<ol><li>Calcula las dos subredes y registra tus decisiones.</li><li>Conecta los equipos, crea las VLAN y configura el router.</li><li>Comprueba cada trayecto y guarda la salida de las pruebas.</li><li>Resuelve una falla, repite las pruebas y explica lo que ocurrió.</li></ol>
-<h3>Cómo usar la bitácora</h3><p>Completa los campos dentro de cada actividad. Los ejemplos en gris muestran el formato y se reemplazan al escribir. Al final puedes revisar los pendientes, descargar un informe y guardar un respaldo para continuar en otro equipo.</p>
-<fieldset><legend>Identificación de la práctica</legend><div class="fields"><label for="equipo">Nombre del equipo<input id="equipo" data-field="equipo" type="text" placeholder="Equipo 03"></label><label for="participantes">Participantes y roles<input id="participantes" data-field="participantes" type="text" placeholder="Ana · configuración; Luis · pruebas; Sara · registro"></label><label for="entorno">Entorno de trabajo<select id="entorno" data-field="entorno"><option value="">Selecciona una opción</option><option>Packet Tracer</option><option>Laboratorio físico</option><option>Red virtual</option></select></label><label for="archivo">Nombre del montaje o respaldo<input id="archivo" data-field="archivo" type="text" placeholder="Equipo03_RedFuncional.pkt"></label></div></fieldset><p class="callout">El guardado se realiza en este navegador. Descarga el respaldo antes de cambiar de dispositivo o borrar los datos del navegador. Los nombres de evidencias son referencias a tus archivos; consérvalos en tu carpeta de entrega.</p></section><section id="conceptos" class="lesson"><h2>Conceptos que vas a recuperar</h2><details class="term"><summary>IP</summary><p>Internet Protocol. Dirección lógica que identifica una interfaz en una red. En esta práctica usas IPv4.</p></details><details class="term"><summary>IPv4</summary><p>Internet Protocol version 4. Dirección de 32 bits escrita en cuatro octetos, por ejemplo 192.168.10.2.</p></details><details class="term"><summary>Subred y máscara</summary><p>Una subred es una parte del bloque original. La máscara indica qué bits identifican la red y cuáles a sus hosts.</p></details><details class="term"><summary>CIDR y prefijo</summary><p>Classless Inter-Domain Routing. /26 indica 26 bits de red y deja 6 bits de host. Su máscara es 255.255.255.192.</p></details><details class="term"><summary>VLSM</summary><p>Variable Length Subnet Mask. Permite usar prefijos diferentes según la capacidad requerida por cada área.</p></details><details class="term"><summary>Host y broadcast</summary><p>Un host es un equipo o interfaz con dirección en la red. Broadcast es la última dirección de una subred, destinada a todos sus hosts.</p></details><details class="term"><summary>Gateway</summary><p>Puerta de enlace. Interfaz del router de la misma subred que el PC, utilizada para llegar a otras redes.</p></details><details class="term"><summary>VLAN</summary><p>Virtual Local Area Network. Separa un switch en redes lógicas. En esta práctica cada VLAN tiene su propia subred.</p></details><details class="term"><summary>Puerto de acceso y troncal</summary><p>Un puerto de acceso pertenece a una VLAN. Un enlace troncal transporta varias VLAN entre dispositivos.</p></details><details class="term"><summary>IEEE 802.1Q y dot1Q</summary><p>Etiquetado de tramas que identifica la VLAN en el enlace troncal. El número de VLAN debe coincidir en S1 y R1.</p></details><details class="term"><summary>Switch y MAC</summary><p>Un switch reenvía tramas dentro de una VLAN según su tabla MAC. MAC significa Media Access Control, dirección de una interfaz de enlace.</p></details><details class="term"><summary>Router y subinterfaz</summary><p>Un router reenvía paquetes entre redes. Una subinterfaz es una división lógica de una interfaz física asociada aquí a una VLAN.</p></details><details class="term"><summary>ARP</summary><p>Address Resolution Protocol. Averigua la dirección MAC del siguiente salto IPv4 en el enlace local.</p></details><details class="term"><summary>ICMP y ping</summary><p>Internet Control Message Protocol. Ping usa mensajes de eco para comprobar alcance IP y respuesta de retorno.</p></details><details class="term"><summary>CLI y configuración</summary><p>Command Line Interface. Consola de comandos. Running-config es la configuración en uso y startup-config la que se conserva para reiniciar.</p></details><details class="term"><summary>Regresión</summary><p>Prueba de una función que ya operaba para confirmar que sigue funcionando después del ajuste.</p></details></section><section id="presaberes" class="lesson"><h2>Recuerda y predice antes de conectar</h2>
-<p>Responde primero con lo que recuerdas. Después abre los conceptos y ajusta tu explicación. Roten los roles de cálculo, configuración y registro al cambiar de actividad.</p><details class="reflection"><summary>¿Qué hace el switch cuando ADM1 se comunica con ADM2?</summary><p>Piensa en las tramas, las direcciones MAC y los puertos de una misma VLAN.</p><label for="previo-switch">Tu explicación<textarea id="previo-switch" data-field="previo-switch" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details><details class="reflection"><summary>¿Por qué se necesita un router entre Administración y Operaciones?</summary><p>Relaciona las subredes IP con la decisión de enviar el paquete al gateway.</p><label for="previo-router">Tu explicación<textarea id="previo-router" data-field="previo-router" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details><details class="reflection"><summary>¿Cómo decide un PC si el destino es local o está en otra red?</summary><p>Compara los bits de red de origen y destino usando la máscara del PC.</p><label for="previo-mascara">Tu explicación<textarea id="previo-mascara" data-field="previo-mascara" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details><details class="reflection"><summary>¿Tener VLAN distintas equivale a tener subredes correctamente configuradas?</summary><p>Una VLAN organiza la capa de enlace. Comprueba también las IP, máscaras y gateways.</p><label for="previo-vlan">Tu explicación<textarea id="previo-vlan" data-field="previo-vlan" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details><details class="reflection"><summary>¿Qué puedes afirmar si un ping responde y qué falta comprobar para entregar la red?</summary><p>Una respuesta demuestra alcance ICMP en ese trayecto. Piensa también en los servicios, disponibilidad y rendimiento que pide el proyecto.</p><label for="previo-ping">Tu explicación<textarea id="previo-ping" data-field="previo-ping" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details><div class="checkpoint"><strong>Comprueba antes de avanzar</strong><p>Dibuja el trayecto entre dos PC del mismo grupo y otro entre áreas. Señala en cuál interviene R1.</p></div></section><section id="subredes" class="lesson"><h2>Calcula y verifica las subredes</h2>
-<p>Asigna bloques consecutivos desde el inicio del /24. Usa el menor bloque que soporte cada área y comienza por la de mayor tamaño.</p>
-<ol><li>Encuentra h con <strong>2<sup>h</sup> − 2 ≥ hosts requeridos</strong>. Los dos valores reservados son la red y el broadcast.</li><li>Calcula el prefijo con 32 − h. Obtén la máscara decimal.</li><li>El tamaño del bloque es 2<sup>h</sup>. En este ejercicio los saltos están en el último octeto.</li><li>La red del siguiente bloque empieza inmediatamente después del broadcast anterior.</li><li>Reserva el primer host como gateway y los dos siguientes para los PC del área.</li></ol>
-<details><summary>Un ejemplo diferente para recordar el procedimiento</summary><p>Para 12 hosts, 2⁴ − 2 = 14. Se usa /28, máscara 255.255.255.240 y bloques de 16 direcciones. En 192.168.5.0/28, los hosts van de .1 a .14 y el broadcast es .15. El siguiente bloque empieza en .16.</p></details>
-<fieldset><legend>Administración · VLAN 10</legend><p class="hint">Requiere 50 direcciones utilizables. Escribe todas las direcciones IPv4 completas.</p><div class="fields"><label for="adm-h">Bits para hosts h<input id="adm-h" data-field="adm-h" type="number" min="0" step="1" placeholder="Ej. 4"></label><label for="adm-prefix">Prefijo CIDR<input id="adm-prefix" data-field="adm-prefix" type="text" placeholder="Ej. /28"></label><label for="adm-mask">Máscara decimal<input id="adm-mask" data-field="adm-mask" type="text" placeholder="Ej. 255.255.255.240"></label><label for="adm-network">Dirección de red<input id="adm-network" data-field="adm-network" type="text" placeholder="Ej. 192.168.10.0"></label><label for="adm-first">Primer host utilizable<input id="adm-first" data-field="adm-first" type="text" placeholder="Ej. 192.168.10.1"></label><label for="adm-last">Último host utilizable<input id="adm-last" data-field="adm-last" type="text" placeholder="Escribe la dirección completa"></label><label for="adm-broadcast">Broadcast<input id="adm-broadcast" data-field="adm-broadcast" type="text" placeholder="Escribe la dirección completa"></label><label for="adm-gateway">Gateway reservado<input id="adm-gateway" data-field="adm-gateway" type="text" placeholder="Usa el primer host del bloque"></label></div></fieldset><fieldset><legend>Operaciones · VLAN 20</legend><p class="hint">Requiere 25 direcciones utilizables. Escribe todas las direcciones IPv4 completas.</p><div class="fields"><label for="ope-h">Bits para hosts h<input id="ope-h" data-field="ope-h" type="number" min="0" step="1" placeholder="Ej. 4"></label><label for="ope-prefix">Prefijo CIDR<input id="ope-prefix" data-field="ope-prefix" type="text" placeholder="Ej. /28"></label><label for="ope-mask">Máscara decimal<input id="ope-mask" data-field="ope-mask" type="text" placeholder="Ej. 255.255.255.240"></label><label for="ope-network">Dirección de red<input id="ope-network" data-field="ope-network" type="text" placeholder="Ej. 192.168.10.0"></label><label for="ope-first">Primer host utilizable<input id="ope-first" data-field="ope-first" type="text" placeholder="Ej. 192.168.10.1"></label><label for="ope-last">Último host utilizable<input id="ope-last" data-field="ope-last" type="text" placeholder="Escribe la dirección completa"></label><label for="ope-broadcast">Broadcast<input id="ope-broadcast" data-field="ope-broadcast" type="text" placeholder="Escribe la dirección completa"></label><label for="ope-gateway">Gateway reservado<input id="ope-gateway" data-field="ope-gateway" type="text" placeholder="Usa el primer host del bloque"></label></div></fieldset><button type="button" id="check-subnets">Revisar mis cálculos</button><div id="subnet-feedback" role="status" aria-live="polite"></div>
-<details><summary>Contrastar con la solución después de intentarlo</summary><p>Administración usa 192.168.10.0/26, máscara 255.255.255.192, hosts .1 a .62, broadcast .63 y gateway .1. Operaciones usa 192.168.10.64/27, máscara 255.255.255.224, hosts .65 a .94, broadcast .95 y gateway .65. Todos los valores abreviados empiezan por 192.168.10.</p></details><div class="checkpoint"><strong>Comprueba antes de avanzar</strong><p>Explica por qué /27 admite Operaciones y resulta insuficiente para Administración. Revisa que ningún PC use una dirección de red o broadcast.</p></div></section><section id="montaje"> <figure class="topologia-diagrama" style="margin: 1.5rem 0; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 1rem; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);">
-  <svg viewBox="0 0 920 470" width="100%" height="auto" role="img" aria-labelledby="titulo-topologia desc-topologia" style="display: block; max-width: 100%; height: auto; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;">
-    <title id="titulo-topologia">Topología lógica y física: Red para Administración (VLAN 10) y Operaciones (VLAN 20)</title>
-    <desc id="desc-topologia">Diagrama de red con Router R1 conectado por enlace troncal 802.1Q al Switch S1, distribuyendo hacia ADM1 y ADM2 en VLAN 10, y OPE1 y OPE2 en VLAN 20.</desc>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Guía práctica de subnetting, VLAN, switch y router con bitácora estructurada y pruebas guiadas.">
+  <title>Laboratorio de redes · RA 4</title>
+  <link rel="stylesheet" href="styles.css?v=2">
+  <script src="app.js?v=2" defer></script>
+  <style>
+    /* Mejoras visuales complementarias para la jornada de 7 horas y la topología */
+    .timeline-7h {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 0.75rem;
+      margin: 1.25rem 0;
+    }
+    .timeline-card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid #0284c7;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+    }
+    .timeline-card strong {
+      display: block;
+      font-size: 0.9rem;
+      color: #0f172a;
+      margin-bottom: 0.2rem;
+    }
+    .timeline-card span {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #0369a1;
+      background: #e0f2fe;
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+      margin-bottom: 0.35rem;
+    }
+    .timeline-card p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: #475569;
+      line-height: 1.4;
+    }
+    .topologia-diagrama {
+      margin: 1.5rem 0;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+    }
+    .topologia-diagrama figcaption {
+      margin-top: 0.65rem;
+      font-size: 0.85rem;
+      color: #475569;
+      text-align: center;
+    }
+    .badge-rol {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #f59e0b;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#contenido">Ir al contenido</a>
+  <header>
+    <span>SENA · Ficha 3399813 · Jornada 7 horas</span>
+    <a href="#bitacora">Revisar mi bitácora ↗</a>
+  </header>
 
-    <defs>
-      <!-- Sombra suave para nodos -->
-      <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="115%">
-        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.08" />
-      </filter>
-    </defs>
+  <div class="layout">
+    <aside>
+      <p class="eyebrow">GUÍA DE PRÁCTICA</p>
+      <nav aria-label="Actividades">
+        <a href="#reto">1. El proyecto</a>
+        <a href="#conceptos">2. Conceptos</a>
+        <a href="#presaberes">3. Recuerda y predice</a>
+        <a href="#subredes">4. Calcula las subredes</a>
+        <a href="#montaje">5. Monta y direcciona</a>
+        <a href="#switch">6. Configura S1</a>
+        <a href="#router">7. Configura R1</a>
+        <a href="#pruebas">8. Registra las pruebas</a>
+        <a href="#diagnostico">9. Resuelve una falla</a>
+        <a href="#real">10. Equipos reales</a>
+        <a href="#repaso">11. Comprueba lo aprendido</a>
+        <a href="#bitacora">12. Revisa y descarga</a>
+      </nav>
+      <div class="save-panel">
+        <p id="save-status" role="status">Tus registros se guardan en este navegador.</p>
+      </div>
+    </aside>
 
-    <!-- Fondo general -->
-    <rect x="0" y="0" width="920" height="470" rx="10" fill="#f8fafc" />
+    <main id="contenido">
+      <div class="hero">
+        <p class="eyebrow">CONFIGURACIÓN Y VERIFICACIÓN DE REDES · RA 4</p>
+        <h1>Configuración de una red<br>para dos áreas</h1>
+        <p>Construye una red segmentada para Administración y Operaciones. Recupera los conceptos, registra cada decisión técnica y usa las pruebas para demostrar que opera sin fallas.</p>
+        <div class="hero-actions">
+          <a class="button" href="#subredes">Empezar el cálculo</a>
+          <a href="#conceptos">Repasar conceptos</a>
+        </div>
+        <div class="network">
+          <div><strong>Administración</strong><span>ADM1 y ADM2 · VLAN 10</span><span>Puertos Fa0/1 y Fa0/2 de S1</span></div>
+          <div><strong>Operaciones</strong><span>OPE1 y OPE2 · VLAN 20</span><span>Puertos Fa0/3 y Fa0/4 de S1</span></div>
+          <div><strong>S1 Gi0/1 ↔ R1 Gi0/0</strong><span>Troncal 802.1Q · VLAN 10 y 20</span></div>
+        </div>
+      </div>
 
-    <!-- ZONAS DE VLAN (Contenedores de fondo) -->
-    <!-- Zona VLAN 10: Administración -->
-    <rect x="24" y="245" width="415" height="205" rx="12" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5" stroke-dasharray="6 4" />
-    <rect x="38" y="256" width="245" height="24" rx="6" fill="#dbeafe" />
-    <text x="48" y="272" font-size="12" font-weight="700" fill="#1e40af">VLAN 10 · ADMINISTRACIÓN (50 hosts)</text>
-    <text x="415" y="272" font-size="11.5" font-weight="600" fill="#2563eb" text-anchor="end">192.168.10.0/26</text>
+      <section id="reto" class="lesson">
+        <h2>Tu proyecto de práctica</h2>
+        <p>Una empresa necesita separar Administración y Operaciones y permitir la comunicación controlada entre ambas áreas. Trabaja con el bloque <strong>192.168.10.0/24</strong>. Administración requiere <strong>50 direcciones utilizables</strong> y Operaciones <strong>25</strong>; esas cantidades incluyen la puerta de enlace.</p>
+        <p>Representa la red con cuatro PC, un switch S1 y un router R1. Los cuatro PC son una muestra de los usuarios previstos. Conserva este montaje y sus registros para el proyecto de verificación del RA 4.</p>
 
-    <!-- Zona VLAN 20: Operaciones -->
-    <rect x="481" y="245" width="415" height="205" rx="12" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.5" stroke-dasharray="6 4" />
-    <rect x="495" y="256" width="235" height="24" rx="6" fill="#d1fae5" />
-    <text x="505" y="272" font-size="12" font-weight="700" fill="#065f46">VLAN 20 · OPERACIONES (25 hosts)</text>
-    <text x="872" y="272" font-size="11.5" font-weight="600" fill="#059669" text-anchor="end">192.168.10.64/27</text>
+        <h3>Ruta sugerida para la sesión de 7 horas</h3>
+        <div class="timeline-7h" aria-label="Distribución de tiempo sugerida">
+          <div class="timeline-card">
+            <span>Bloque 1 · 1 h 30 min</span>
+            <strong>Diseño y presaberes</strong>
+            <p>Repaso conceptual, predicciones de flujo de paquetes y cálculo VLSM validado.</p>
+          </div>
+          <div class="timeline-card">
+            <span>Bloque 2 · 2 h 00 min</span>
+            <strong>Montaje y configuración</strong>
+            <p>Cableado lógico, direccionamiento de PC, VLAN en S1, subinterfaces en R1 y pruebas P1–P6.</p>
+          </div>
+          <div class="timeline-card">
+            <span>Bloque 3 · 2 h 00 min</span>
+            <strong>Fallas y equipos reales</strong>
+            <p>Inyección de fallas cruzadas con rotación de roles y migración a hardware real.</p>
+          </div>
+          <div class="timeline-card">
+            <span>Bloque 4 · 1 h 30 min</span>
+            <strong>Verificación y entrega</strong>
+            <p>Cuestionario de decisiones, auditoría de bitácora, exportación de evidencias y sustentación.</p>
+          </div>
+        </div>
 
-    <!-- ENLACES DE RED (Cables) -->
-    <!-- Troncal S1 Gi0/1 <-> R1 Gi0/0 -->
-    <line x1="330" y1="125" x2="545" y2="125" stroke="#0f172a" stroke-width="4" />
-    <line x1="330" y1="125" x2="545" y2="125" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="8 5" />
+        <ol>
+          <li>Calcula las dos subredes y registra tus decisiones.</li>
+          <li>Conecta los equipos, crea las VLAN y configura el router.</li>
+          <li>Comprueba cada trayecto y guarda la salida de las pruebas.</li>
+          <li>Resuelve una falla, repite las pruebas y explica lo que ocurrió.</li>
+        </ol>
 
-    <!-- Enlaces de acceso VLAN 10 -->
-    <polyline points="205,165 205,215 125,215 125,305" fill="none" stroke="#2563eb" stroke-width="2.5" />
-    <polyline points="235,165 235,215 335,215 335,305" fill="none" stroke="#2563eb" stroke-width="2.5" />
+        <h3>Cómo usar la bitácora</h3>
+        <p>Completa los campos dentro de cada actividad. Los ejemplos en gris muestran el formato usando otro bloque IP para evitar copias directas. Al final puedes revisar los pendientes, descargar un informe Markdown y guardar un respaldo JSON para continuar en otro equipo.</p>
+        <fieldset>
+          <legend>Identificación de la práctica</legend>
+          <div class="fields">
+            <label for="equipo">Nombre del equipo<input id="equipo" data-field="equipo" type="text" placeholder="Ej. Equipo 03"></label>
+            <label for="participantes">Participantes y roles<input id="participantes" data-field="participantes" type="text" placeholder="Ej. Ana · configuración; Luis · pruebas; Sara · registro"></label>
+            <label for="entorno">Entorno de trabajo<select id="entorno" data-field="entorno"><option value="">Selecciona una opción</option><option>Packet Tracer</option><option>Laboratorio físico</option><option>Red virtual</option></select></label>
+            <label for="archivo">Nombre del montaje o respaldo<input id="archivo" data-field="archivo" type="text" placeholder="Ej. Equipo03_RedFuncional.pkt"></label>
+          </div>
+        </fieldset>
+        <p class="callout">El guardado se realiza en este navegador. Descarga el respaldo antes de cambiar de dispositivo o borrar los datos del navegador. Los nombres de evidencias son referencias a tus archivos; consérvalos en tu carpeta de entrega.</p>
+      </section>
 
-    <!-- Enlaces de acceso VLAN 20 -->
-    <polyline points="265,165 265,205 585,205 585,305" fill="none" stroke="#059669" stroke-width="2.5" />
-    <polyline points="295,165 295,193 795,193 795,305" fill="none" stroke="#059669" stroke-width="2.5" />
+      <section id="conceptos" class="lesson">
+        <h2>Conceptos que vas a recuperar</h2>
+        <details class="term"><summary>IP</summary><p>Internet Protocol. Dirección lógica que identifica una interfaz en una red. En esta práctica usas IPv4.</p></details>
+        <details class="term"><summary>IPv4</summary><p>Internet Protocol version 4. Dirección de 32 bits escrita en cuatro octetos, por ejemplo 172.16.50.2.</p></details>
+        <details class="term"><summary>Subred y máscara</summary><p>Una subred es una parte del bloque original. La máscara indica qué bits identifican la red y cuáles a sus hosts.</p></details>
+        <details class="term"><summary>CIDR y prefijo</summary><p>Classless Inter-Domain Routing. /25 indica 25 bits de red y deja 7 bits de host. Su máscara es 255.255.255.128.</p></details>
+        <details class="term"><summary>VLSM</summary><p>Variable Length Subnet Mask. Permite usar prefijos diferentes según la capacidad requerida por cada área.</p></details>
+        <details class="term"><summary>Host y broadcast</summary><p>Un host es un equipo o interfaz con dirección en la red. Broadcast es la última dirección de una subred, destinada a todos sus hosts.</p></details>
+        <details class="term"><summary>Gateway</summary><p>Puerta de enlace. Interfaz del router de la misma subred que el PC, utilizada para llegar a otras redes.</p></details>
+        <details class="term"><summary>VLAN</summary><p>Virtual Local Area Network. Separa un switch en redes lógicas. En esta práctica cada VLAN tiene su propia subred.</p></details>
+        <details class="term"><summary>Puerto de acceso y troncal</summary><p>Un puerto de acceso pertenece a una VLAN. Un enlace troncal transporta varias VLAN entre dispositivos.</p></details>
+        <details class="term"><summary>IEEE 802.1Q y dot1Q</summary><p>Etiquetado de tramas que identifica la VLAN en el enlace troncal. El número de VLAN debe coincidir en S1 y R1.</p></details>
+        <details class="term"><summary>Switch y MAC</summary><p>Un switch reenvía tramas dentro de una VLAN según su tabla MAC. MAC significa Media Access Control, dirección de una interfaz de enlace.</p></details>
+        <details class="term"><summary>Router y subinterfaz</summary><p>Un router reenvía paquetes entre redes. Una subinterfaz es una división lógica de una interfaz física asociada aquí a una VLAN.</p></details>
+        <details class="term"><summary>ARP</summary><p>Address Resolution Protocol. Averigua la dirección MAC del siguiente salto IPv4 en el enlace local.</p></details>
+        <details class="term"><summary>ICMP y ping</summary><p>Internet Control Message Protocol. Ping usa mensajes de eco para comprobar alcance IP y respuesta de retorno.</p></details>
+        <details class="term"><summary>CLI y configuración</summary><p>Command Line Interface. Consola de comandos. Running-config es la configuración en uso y startup-config la que se conserva para reiniciar.</p></details>
+        <details class="term"><summary>Regresión</summary><p>Prueba de una función que ya operaba para confirmar que sigue funcionando después del ajuste.</p></details>
+      </section>
 
-    <!-- ETIQUETAS DE PUERTOS E INTERFACES -->
-    <!-- Puertos Switch hacia PCs -->
-    <rect x="97" y="222" width="56" height="18" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1" />
-    <text x="125" y="234" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">Fa0/1</text>
+      <section id="presaberes" class="lesson">
+        <h2>Recuerda y predice antes de conectar</h2>
+        <div class="badge-rol">Rotación de rol: Lidera quien documenta y contrasta hipótesis</div>
+        <p>Responde primero con lo que recuerdas. Después abre los conceptos y ajusta tu explicación. Roten los roles de cálculo, configuración y registro al cambiar de actividad.</p>
+        <details class="reflection"><summary>¿Qué hace el switch cuando ADM1 se comunica con ADM2?</summary><p>Piensa en las tramas, las direcciones MAC y los puertos de una misma VLAN.</p><label for="previo-switch">Tu explicación<textarea id="previo-switch" data-field="previo-switch" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details>
+        <details class="reflection"><summary>¿Por qué se necesita un router entre Administración y Operaciones?</summary><p>Relaciona las subredes IP con la decisión de enviar el paquete al gateway.</p><label for="previo-router">Tu explicación<textarea id="previo-router" data-field="previo-router" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details>
+        <details class="reflection"><summary>¿Cómo decide un PC si el destino es local o está en otra red?</summary><p>Compara los bits de red de origen y destino usando la máscara del PC.</p><label for="previo-mascara">Tu explicación<textarea id="previo-mascara" data-field="previo-mascara" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details>
+        <details class="reflection"><summary>¿Tener VLAN distintas equivale a tener subredes correctamente configuradas?</summary><p>Una VLAN organiza la capa de enlace. Comprueba también las IP, máscaras y gateways.</p><label for="previo-vlan">Tu explicación<textarea id="previo-vlan" data-field="previo-vlan" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details>
+        <details class="reflection"><summary>¿Qué puedes afirmar si un ping responde y qué falta comprobar para entregar la red?</summary><p>Una respuesta demuestra alcance ICMP en ese trayecto. Piensa también en los servicios, disponibilidad y rendimiento que pide el proyecto.</p><label for="previo-ping">Tu explicación<textarea id="previo-ping" data-field="previo-ping" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details>
+        <div class="checkpoint"><strong>Comprueba antes de avanzar</strong><p>Dibuja el trayecto entre dos PC del mismo grupo y otro entre áreas. Señala en cuál interviene R1.</p></div>
+      </section>
 
-    <rect x="307" y="222" width="56" height="18" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1" />
-    <text x="335" y="234" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">Fa0/2</text>
+      <section id="subredes" class="lesson">
+        <h2>Calcula y verifica las subredes</h2>
+        <div class="badge-rol">Rotación de rol: Lidera quien calcula y verifica VLSM</div>
+        <p>Asigna bloques consecutivos desde el inicio de <strong>192.168.10.0/24</strong>. Usa el menor bloque que soporte cada área y comienza por la de mayor tamaño.</p>
+        <ol>
+          <li>Encuentra h con <strong>2<sup>h</sup> − 2 ≥ hosts requeridos</strong>. Los dos valores reservados son la red y el broadcast.</li>
+          <li>Calcula el prefijo con 32 − h. Obtén la máscara decimal.</li>
+          <li>El tamaño del bloque es 2<sup>h</sup>. En este ejercicio los saltos están en el último octeto.</li>
+          <li>La red del siguiente bloque empieza inmediatamente después del broadcast anterior.</li>
+          <li>Reserva el primer host como gateway y los dos siguientes para los PC del área.</li>
+        </ol>
+        <details><summary>Un ejemplo diferente para recordar el procedimiento</summary><p>Para 12 hosts, 2⁴ − 2 = 14. Se usa /28, máscara 255.255.255.240 y bloques de 16 direcciones. En 192.168.5.0/28, los hosts van de .1 a .14 y el broadcast es .15. El siguiente bloque empieza en .16.</p></details>
+        <fieldset>
+          <legend>Administración · VLAN 10</legend>
+          <p class="hint">Requiere 50 direcciones utilizables. Escribe todas las direcciones IPv4 completas.</p>
+          <div class="fields">
+            <label for="adm-h">Bits para hosts h<input id="adm-h" data-field="adm-h" type="number" min="0" step="1" placeholder="Ej. 4"></label>
+            <label for="adm-prefix">Prefijo CIDR<input id="adm-prefix" data-field="adm-prefix" type="text" placeholder="Ej. /28"></label>
+            <label for="adm-mask">Máscara decimal<input id="adm-mask" data-field="adm-mask" type="text" placeholder="Ej. 255.255.255.240"></label>
+            <label for="adm-network">Dirección de red<input id="adm-network" data-field="adm-network" type="text" placeholder="Ej. 172.16.50.0"></label>
+            <label for="adm-first">Primer host utilizable<input id="adm-first" data-field="adm-first" type="text" placeholder="Ej. 172.16.50.1"></label>
+            <label for="adm-last">Último host utilizable<input id="adm-last" data-field="adm-last" type="text" placeholder="Escribe la dirección completa"></label>
+            <label for="adm-broadcast">Broadcast<input id="adm-broadcast" data-field="adm-broadcast" type="text" placeholder="Escribe la dirección completa"></label>
+            <label for="adm-gateway">Gateway reservado<input id="adm-gateway" data-field="adm-gateway" type="text" placeholder="Usa el primer host del bloque"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Operaciones · VLAN 20</legend>
+          <p class="hint">Requiere 25 direcciones utilizables. Escribe todas las direcciones IPv4 completas.</p>
+          <div class="fields">
+            <label for="ope-h">Bits para hosts h<input id="ope-h" data-field="ope-h" type="number" min="0" step="1" placeholder="Ej. 4"></label>
+            <label for="ope-prefix">Prefijo CIDR<input id="ope-prefix" data-field="ope-prefix" type="text" placeholder="Ej. /28"></label>
+            <label for="ope-mask">Máscara decimal<input id="ope-mask" data-field="ope-mask" type="text" placeholder="Ej. 255.255.255.240"></label>
+            <label for="ope-network">Dirección de red<input id="ope-network" data-field="ope-network" type="text" placeholder="Ej. 172.16.50.128"></label>
+            <label for="ope-first">Primer host utilizable<input id="ope-first" data-field="ope-first" type="text" placeholder="Ej. 172.16.50.129"></label>
+            <label for="ope-last">Último host utilizable<input id="ope-last" data-field="ope-last" type="text" placeholder="Escribe la dirección completa"></label>
+            <label for="ope-broadcast">Broadcast<input id="ope-broadcast" data-field="ope-broadcast" type="text" placeholder="Escribe la dirección completa"></label>
+            <label for="ope-gateway">Gateway reservado<input id="ope-gateway" data-field="ope-gateway" type="text" placeholder="Usa el primer host del bloque"></label>
+          </div>
+        </fieldset>
+        <button type="button" id="check-subnets">Revisar mis cálculos</button>
+        <div id="subnet-feedback" role="status" aria-live="polite"></div>
+        <details><summary>Contrastar con la solución después de intentarlo</summary><p>Administración usa 192.168.10.0/26, máscara 255.255.255.192, hosts .1 a .62, broadcast .63 y gateway .1. Operaciones usa 192.168.10.64/27, máscara 255.255.255.224, hosts .65 a .94, broadcast .95 y gateway .65. Todos los valores abreviados empiezan por 192.168.10.</p></details>
+        <div class="checkpoint"><strong>Comprueba antes de avanzar</strong><p>Explica por qué /27 admite Operaciones y resulta insuficiente para Administración. Revisa que ningún PC use una dirección de red o broadcast.</p></div>
+      </section>
 
-    <rect x="557" y="222" width="56" height="18" rx="4" fill="#ffffff" stroke="#6ee7b7" stroke-width="1" />
-    <text x="585" y="234" font-size="10.5" font-weight="700" fill="#065f46" text-anchor="middle">Fa0/3</text>
+      <section id="montaje" class="lesson">
+        <h2>Conecta los equipos y registra las IP</h2>
+        <div class="badge-rol">Rotación de rol: Lidera quien cablea y direcciona los hosts</div>
+        <p>Usa un switch 2960, un router 1941 y cuatro PC en Packet Tracer. Conecta con cable de cobre directo siguiendo la topología y la tabla. En equipo físico, identifica el modelo y los nombres de interfaces antes de usar los comandos.</p>
 
-    <rect x="767" y="222" width="56" height="18" rx="4" fill="#ffffff" stroke="#6ee7b7" stroke-width="1" />
-    <text x="795" y="234" font-size="10.5" font-weight="700" fill="#065f46" text-anchor="middle">Fa0/4</text>
+        <figure class="topologia-diagrama">
+          <svg viewBox="0 0 920 485" width="100%" height="auto" role="img" aria-labelledby="titulo-topologia desc-topologia" style="display: block; max-width: 100%; height: auto; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;">
+            <title id="titulo-topologia">Esquema de referencia de topología: Router-on-a-Stick con VLAN 10 y VLAN 20</title>
+            <desc id="desc-topologia">Diagrama de referencia con Router R1 conectado por enlace troncal 802.1Q al Switch S1, mostrando un direccionamiento de ejemplo en el bloque 172.16.50.0/24 para evitar copia directa.</desc>
 
-    <!-- Etiquetas Enlace Troncal -->
-    <rect x="338" y="102" width="44" height="18" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" />
-    <text x="360" y="114" font-size="10.5" font-weight="700" fill="#92400e" text-anchor="middle">Gi0/1</text>
+            <defs>
+              <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="115%">
+                <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.08" />
+              </filter>
+            </defs>
 
-    <rect x="493" y="102" width="44" height="18" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" />
-    <text x="515" y="114" font-size="10.5" font-weight="700" fill="#92400e" text-anchor="middle">Gi0/0</text>
+            <!-- Fondo general -->
+            <rect x="0" y="0" width="920" height="485" rx="10" fill="#f8fafc" />
 
-    <rect x="383" y="133" width="110" height="20" rx="10" fill="#0f172a" />
-    <text x="438" y="146" font-size="10.5" font-weight="700" fill="#fbbf24" text-anchor="middle">TRUNK · 802.1Q</text>
+            <!-- Banner superior de advertencia pedagógica -->
+            <rect x="24" y="14" width="872" height="28" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" />
+            <text x="460" y="32" font-size="11.5" font-weight="700" fill="#92400e" text-anchor="middle">ESQUEMA DE REFERENCIA (Ejemplo sobre 172.16.50.0/24 · Configura tus subredes calculadas de 192.168.10.0/24)</text>
 
-    <!-- DISPOSITIVO: SWITCH S1 (Cisco 2960) -->
-    <g filter="url(#cardShadow)">
-      <rect x="160" y="80" width="170" height="85" rx="10" fill="#1e293b" stroke="#0f172a" stroke-width="2" />
-      <!-- Icono Switch -->
-      <rect x="176" y="95" width="42" height="26" rx="4" fill="#334155" stroke="#64748b" stroke-width="1.2" />
-      <path d="M183 103 h14 l-3 -3 m3 3 l-3 3 M211 113 h-14 l3 -3 m-3 3 l3 3" stroke="#38bdf8" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-      <text x="230" y="110" font-size="15" font-weight="800" fill="#ffffff">Switch S1</text>
-      <text x="230" y="125" font-size="11" fill="#94a3b8">Cisco 2960 · Capa 2</text>
-      <line x1="175" y1="136" x2="315" y2="136" stroke="#334155" stroke-width="1" />
-      <text x="245" y="152" font-size="10.5" fill="#e2e8f0" text-anchor="middle">Acceso: Fa0/1–4 · Trunk: Gi0/1</text>
-    </g>
+            <!-- ZONAS DE VLAN (Contenedores de fondo) -->
+            <!-- Zona VLAN 10: Administración -->
+            <rect x="24" y="260" width="415" height="205" rx="12" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5" stroke-dasharray="6 4" />
+            <rect x="38" y="271" width="215" height="24" rx="6" fill="#dbeafe" />
+            <text x="48" y="287" font-size="12" font-weight="700" fill="#1e40af">VLAN 10 · ADMINISTRACIÓN</text>
+            <text x="415" y="287" font-size="11.5" font-weight="600" fill="#2563eb" text-anchor="end">Ej: 172.16.50.0/25</text>
 
-    <!-- DISPOSITIVO: ROUTER R1 (Cisco 1941 - Router-on-a-Stick) -->
-    <g filter="url(#cardShadow)">
-      <rect x="545" y="55" width="340" height="125" rx="10" fill="#ffffff" stroke="#334155" stroke-width="2" />
-      <rect x="545" y="55" width="340" height="38" rx="8" fill="#0f172a" />
-      <!-- Icono Router -->
-      <circle cx="572" cy="74" r="12" fill="#334155" stroke="#38bdf8" stroke-width="1.5" />
-      <path d="M566 74 h12 M572 68 v12" stroke="#38bdf8" stroke-width="1.6" stroke-linecap="round" />
-      <text x="594" y="79" font-size="14.5" font-weight="800" fill="#ffffff">Router R1 (Cisco 1941 · Inter-VLAN)</text>
+            <!-- Zona VLAN 20: Operaciones -->
+            <rect x="481" y="260" width="415" height="205" rx="12" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.5" stroke-dasharray="6 4" />
+            <rect x="495" y="271" width="205" height="24" rx="6" fill="#d1fae5" />
+            <text x="505" y="287" font-size="12" font-weight="700" fill="#065f46">VLAN 20 · OPERACIONES</text>
+            <text x="872" y="287" font-size="11.5" font-weight="600" fill="#059669" text-anchor="end">Ej: 172.16.50.128/26</text>
 
-      <!-- Subinterfaz Gi0/0.10 -->
-      <rect x="560" y="103" width="150" height="64" rx="7" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2" />
-      <text x="570" y="120" font-size="11.5" font-weight="800" fill="#1e40af">Gi0/0.10 · dot1Q 10</text>
-      <text x="570" y="137" font-size="11" font-weight="600" fill="#1e3a8a">GW: 192.168.10.1</text>
-      <text x="570" y="153" font-size="10.5" fill="#3b82f6">255.255.255.192 (/26)</text>
+            <!-- ENLACES DE RED (Cables) -->
+            <!-- Troncal S1 Gi0/1 <-> R1 Gi0/0 -->
+            <line x1="330" y1="140" x2="545" y2="140" stroke="#0f172a" stroke-width="4" />
+            <line x1="330" y1="140" x2="545" y2="140" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="8 5" />
 
-      <!-- Subinterfaz Gi0/0.20 -->
-      <rect x="720" y="103" width="150" height="64" rx="7" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.2" />
-      <text x="730" y="120" font-size="11.5" font-weight="800" fill="#065f46">Gi0/0.20 · dot1Q 20</text>
-      <text x="730" y="137" font-size="11" font-weight="600" fill="#064e3b">GW: 192.168.10.65</text>
-      <text x="730" y="153" font-size="10.5" fill="#10b981">255.255.255.224 (/27)</text>
-    </g>
+            <!-- Enlaces de acceso VLAN 10 -->
+            <polyline points="205,180 205,230 125,230 125,320" fill="none" stroke="#2563eb" stroke-width="2.5" />
+            <polyline points="235,180 235,230 335,230 335,320" fill="none" stroke="#2563eb" stroke-width="2.5" />
 
-    <!-- HOSTS DE ADMINISTRACIÓN (VLAN 10) -->
-    <!-- ADM1 -->
-    <g filter="url(#cardShadow)">
-      <rect x="45" y="305" width="160" height="122" rx="9" fill="#ffffff" stroke="#2563eb" stroke-width="1.8" />
-      <rect x="45" y="305" width="160" height="28" rx="7" fill="#2563eb" />
-      <text x="125" y="324" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">PC ADM1</text>
-      <text x="57" y="352" font-size="11" font-weight="700" fill="#1e293b">IP: <tspan fill="#2563eb">192.168.10.2</tspan></text>
-      <text x="57" y="370" font-size="10.5" fill="#475569">Másc: 255.255.255.192</text>
-      <text x="57" y="388" font-size="10.5" fill="#475569">GW: 192.168.10.1</text>
-      <line x1="57" y1="398" x2="193" y2="398" stroke="#e2e8f0" stroke-width="1" />
-      <text x="125" y="415" font-size="10.5" font-weight="700" fill="#1d4ed8" text-anchor="middle">Fa0 → S1 Fa0/1</text>
-    </g>
+            <!-- Enlaces de acceso VLAN 20 -->
+            <polyline points="265,180 265,220 585,220 585,320" fill="none" stroke="#059669" stroke-width="2.5" />
+            <polyline points="295,180 295,208 795,208 795,320" fill="none" stroke="#059669" stroke-width="2.5" />
 
-    <!-- ADM2 -->
-    <g filter="url(#cardShadow)">
-      <rect x="255" y="305" width="160" height="122" rx="9" fill="#ffffff" stroke="#2563eb" stroke-width="1.8" />
-      <rect x="255" y="305" width="160" height="28" rx="7" fill="#2563eb" />
-      <text x="335" y="324" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">PC ADM2</text>
-      <text x="267" y="352" font-size="11" font-weight="700" fill="#1e293b">IP: <tspan fill="#2563eb">192.168.10.3</tspan></text>
-      <text x="267" y="370" font-size="10.5" fill="#475569">Másc: 255.255.255.192</text>
-      <text x="267" y="388" font-size="10.5" fill="#475569">GW: 192.168.10.1</text>
-      <line x1="267" y1="398" x2="403" y2="398" stroke="#e2e8f0" stroke-width="1" />
-      <text x="335" y="415" font-size="10.5" font-weight="700" fill="#1d4ed8" text-anchor="middle">Fa0 → S1 Fa0/2</text>
-    </g>
+            <!-- ETIQUETAS DE PUERTOS E INTERFACES -->
+            <rect x="97" y="237" width="56" height="18" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1" />
+            <text x="125" y="249" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">Fa0/1</text>
 
-    <!-- HOSTS DE OPERACIONES (VLAN 20) -->
-    <!-- OPE1 -->
-    <g filter="url(#cardShadow)">
-      <rect x="505" y="305" width="160" height="122" rx="9" fill="#ffffff" stroke="#059669" stroke-width="1.8" />
-      <rect x="505" y="305" width="160" height="28" rx="7" fill="#059669" />
-      <text x="585" y="324" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">PC OPE1</text>
-      <text x="517" y="352" font-size="11" font-weight="700" fill="#1e293b">IP: <tspan fill="#059669">192.168.10.66</tspan></text>
-      <text x="517" y="370" font-size="10.5" fill="#475569">Másc: 255.255.255.224</text>
-      <text x="517" y="388" font-size="10.5" fill="#475569">GW: 192.168.10.65</text>
-      <line x1="517" y1="398" x2="653" y2="398" stroke="#e2e8f0" stroke-width="1" />
-      <text x="585" y="415" font-size="10.5" font-weight="700" fill="#047857" text-anchor="middle">Fa0 → S1 Fa0/3</text>
-    </g>
+            <rect x="307" y="237" width="56" height="18" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1" />
+            <text x="335" y="249" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">Fa0/2</text>
 
-    <!-- OPE2 -->
-    <g filter="url(#cardShadow)">
-      <rect x="715" y="305" width="160" height="122" rx="9" fill="#ffffff" stroke="#059669" stroke-width="1.8" />
-      <rect x="715" y="305" width="160" height="28" rx="7" fill="#059669" />
-      <text x="795" y="324" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">PC OPE2</text>
-      <text x="727" y="352" font-size="11" font-weight="700" fill="#1e293b">IP: <tspan fill="#059669">192.168.10.67</tspan></text>
-      <text x="727" y="370" font-size="10.5" fill="#475569">Másc: 255.255.255.224</text>
-      <text x="727" y="388" font-size="10.5" fill="#475569">GW: 192.168.10.65</text>
-      <line x1="727" y1="398" x2="863" y2="398" stroke="#e2e8f0" stroke-width="1" />
-      <text x="795" y="415" font-size="10.5" font-weight="700" fill="#047857" text-anchor="middle">Fa0 → S1 Fa0/4</text>
-    </g>
-  </svg>
-  <figcaption style="margin-top: 0.65rem; font-size: 0.85rem; color: #475569; text-align: center;">
-    <strong>Figura 1.</strong> Topología física y lógica (Router-on-a-Stick) con segmentación VLAN 10 y VLAN 20 sobre el bloque <code>192.168.10.0/24</code>.
-  </figcaption>
-</figure> <class="lesson"><h2>Conecta los equipos y registra las IP</h2>
-<p>Usa un switch 2960, un router 1941 y cuatro PC en Packet Tracer. Conecta con cable de cobre directo siguiendo esta tabla. En equipo físico, identifica el modelo y los nombres de interfaces antes de usar los comandos.</p><div class="table-wrap"><table><thead><tr><th scope="col">Equipo</th><th scope="col">Interfaz del equipo</th><th scope="col">Conexión en S1</th><th scope="col">Función</th></tr></thead><tbody><tr><td>ADM1</td><td>FastEthernet0</td><td>S1 Fa0/1</td><td>VLAN 10</td></tr><tr><td>ADM2</td><td>FastEthernet0</td><td>S1 Fa0/2</td><td>VLAN 10</td></tr><tr><td>OPE1</td><td>FastEthernet0</td><td>S1 Fa0/3</td><td>VLAN 20</td></tr><tr><td>OPE2</td><td>FastEthernet0</td><td>S1 Fa0/4</td><td>VLAN 20</td></tr><tr><td>R1</td><td>Gi0/0</td><td>S1 Gi0/1</td><td>Troncal VLAN 10 y 20</td></tr></tbody></table></div>
-<p>Abre <strong>Desktop → IP Configuration</strong> en cada PC. Escribe su IP, máscara y gateway calculados. En laboratorio real usa la configuración IPv4 de la interfaz Ethernet del sistema operativo y consulta el resultado con <code>ipconfig /all</code> en Windows o <code>ip address</code> e <code>ip route</code> en Linux.</p>
-<p>Completa una tarjeta por PC con los valores que realmente configuraste. Anota el puerto real incluso si coincide con el propuesto.</p><fieldset><legend>ADM1 · S1 Fa0/1 · VLAN 10</legend><div class="fields"><label for="adm1-ip">IP asignada<input id="adm1-ip" data-field="adm1-ip" type="text" placeholder="192.168.10.2"></label><label for="adm1-mask">Máscara<input id="adm1-mask" data-field="adm1-mask" type="text" placeholder="Usa la máscara del área"></label><label for="adm1-gateway">Gateway<input id="adm1-gateway" data-field="adm1-gateway" type="text" placeholder="IP de R1 en la misma subred"></label><label for="adm1-port">Puerto real del switch<input id="adm1-port" data-field="adm1-port" type="text" placeholder="Fa0/1"></label></div></fieldset><fieldset><legend>ADM2 · S1 Fa0/2 · VLAN 10</legend><div class="fields"><label for="adm2-ip">IP asignada<input id="adm2-ip" data-field="adm2-ip" type="text" placeholder="192.168.10.3"></label><label for="adm2-mask">Máscara<input id="adm2-mask" data-field="adm2-mask" type="text" placeholder="Usa la máscara del área"></label><label for="adm2-gateway">Gateway<input id="adm2-gateway" data-field="adm2-gateway" type="text" placeholder="IP de R1 en la misma subred"></label><label for="adm2-port">Puerto real del switch<input id="adm2-port" data-field="adm2-port" type="text" placeholder="Fa0/2"></label></div></fieldset><fieldset><legend>OPE1 · S1 Fa0/3 · VLAN 20</legend><div class="fields"><label for="ope1-ip">IP asignada<input id="ope1-ip" data-field="ope1-ip" type="text" placeholder="192.168.10.66"></label><label for="ope1-mask">Máscara<input id="ope1-mask" data-field="ope1-mask" type="text" placeholder="Usa la máscara del área"></label><label for="ope1-gateway">Gateway<input id="ope1-gateway" data-field="ope1-gateway" type="text" placeholder="IP de R1 en la misma subred"></label><label for="ope1-port">Puerto real del switch<input id="ope1-port" data-field="ope1-port" type="text" placeholder="Fa0/3"></label></div></fieldset><fieldset><legend>OPE2 · S1 Fa0/4 · VLAN 20</legend><div class="fields"><label for="ope2-ip">IP asignada<input id="ope2-ip" data-field="ope2-ip" type="text" placeholder="192.168.10.67"></label><label for="ope2-mask">Máscara<input id="ope2-mask" data-field="ope2-mask" type="text" placeholder="Usa la máscara del área"></label><label for="ope2-gateway">Gateway<input id="ope2-gateway" data-field="ope2-gateway" type="text" placeholder="IP de R1 en la misma subred"></label><label for="ope2-port">Puerto real del switch<input id="ope2-port" data-field="ope2-port" type="text" placeholder="Fa0/4"></label></div></fieldset><fieldset><legend>Identificación de equipos activos</legend><div class="fields"><label for="s1-model">Modelo de S1<input id="s1-model" data-field="s1-model" type="text" placeholder="2960"></label><label for="s1-version">Software y versión de S1<input id="s1-version" data-field="s1-version" type="text" placeholder="Dato de show version"></label><label for="r1-model">Modelo de R1<input id="r1-model" data-field="r1-model" type="text" placeholder="1941"></label><label for="r1-version">Software y versión de R1<input id="r1-version" data-field="r1-version" type="text" placeholder="Dato de show version"></label></div></fieldset><button type="button" id="check-pcs">Revisar direccionamiento de los PC</button><div id="pc-feedback" role="status" aria-live="polite"></div><div class="checkpoint"><strong>Comprueba antes de avanzar</strong><p>Confirma que cada IP es única, pertenece a la subred de su VLAN y tiene la misma máscara y gateway de su área.</p></div></section><section id="switch" class="lesson"><h2>Configura S1 y verifica cada VLAN</h2>
-<p>En S1 abre <strong>CLI</strong> y pulsa Enter para acceder a la consola. <code>enable</code> abre el modo privilegiado y <code>configure terminal</code> permite cambiar la configuración. <code>exit</code> vuelve al nivel anterior y <code>end</code> regresa al modo privilegiado.</p>
-<ol><li>Crea VLAN 10 y 20.</li><li>Asigna los dos PC de cada área a puertos de acceso de su VLAN.</li><li>Configura el enlace a R1 como troncal y permite VLAN 10 y 20.</li><li>Consulta el resultado y guarda la configuración. Al ejecutar <code>copy running-config startup-config</code>, confirma el nombre propuesto con Enter.</li></ol><h3>Secuencia de referencia para S1</h3><div class="command"><button type="button" class="copy">Copiar comandos</button><pre><code>enable
+            <rect x="557" y="237" width="56" height="18" rx="4" fill="#ffffff" stroke="#6ee7b7" stroke-width="1" />
+            <text x="585" y="249" font-size="10.5" font-weight="700" fill="#065f46" text-anchor="middle">Fa0/3</text>
+
+            <rect x="767" y="237" width="56" height="18" rx="4" fill="#ffffff" stroke="#6ee7b7" stroke-width="1" />
+            <text x="795" y="249" font-size="10.5" font-weight="700" fill="#065f46" text-anchor="middle">Fa0/4</text>
+
+            <!-- Etiquetas Enlace Troncal -->
+            <rect x="338" y="117" width="44" height="18" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" />
+            <text x="360" y="129" font-size="10.5" font-weight="700" fill="#92400e" text-anchor="middle">Gi0/1</text>
+
+            <rect x="493" y="117" width="44" height="18" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" />
+            <text x="515" y="129" font-size="10.5" font-weight="700" fill="#92400e" text-anchor="middle">Gi0/0</text>
+
+            <rect x="383" y="148" width="110" height="20" rx="10" fill="#0f172a" />
+            <text x="438" y="161" font-size="10.5" font-weight="700" fill="#fbbf24" text-anchor="middle">TRUNK · 802.1Q</text>
+
+            <!-- DISPOSITIVO: SWITCH S1 (Cisco 2960) -->
+            <g filter="url(#cardShadow)">
+              <rect x="160" y="95" width="170" height="85" rx="10" fill="#1e293b" stroke="#0f172a" stroke-width="2" />
+              <rect x="176" y="110" width="42" height="26" rx="4" fill="#334155" stroke="#64748b" stroke-width="1.2" />
+              <path d="M183 118 h14 l-3 -3 m3 3 l-3 3 M211 128 h-14 l3 -3 m-3 3 l3 3" stroke="#38bdf8" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+              <text x="230" y="125" font-size="15" font-weight="800" fill="#ffffff">Switch S1</text>
+              <text x="230" y="140" font-size="11" fill="#94a3b8">Cisco 2960 · Capa 2</text>
+              <line x1="175" y1="151" x2="315" y2="151" stroke="#334155" stroke-width="1" />
+              <text x="245" y="167" font-size="10.5" fill="#e2e8f0" text-anchor="middle">Acceso: Fa0/1–4 · Trunk: Gi0/1</text>
+            </g>
+
+            <!-- DISPOSITIVO: ROUTER R1 (Cisco 1941 - Router-on-a-Stick) -->
+            <g filter="url(#cardShadow)">
+              <rect x="545" y="70" width="340" height="125" rx="10" fill="#ffffff" stroke="#334155" stroke-width="2" />
+              <rect x="545" y="70" width="340" height="38" rx="8" fill="#0f172a" />
+              <circle cx="572" cy="89" r="12" fill="#334155" stroke="#38bdf8" stroke-width="1.5" />
+              <path d="M566 89 h12 M572 83 v12" stroke="#38bdf8" stroke-width="1.6" stroke-linecap="round" />
+              <text x="594" y="94" font-size="14.5" font-weight="800" fill="#ffffff">Router R1 (Cisco 1941 · Inter-VLAN)</text>
+
+              <!-- Subinterfaz Gi0/0.10 (Ejemplo) -->
+              <rect x="560" y="118" width="150" height="64" rx="7" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2" />
+              <text x="570" y="135" font-size="11.5" font-weight="800" fill="#1e40af">Gi0/0.10 · dot1Q 10</text>
+              <text x="570" y="152" font-size="11" font-weight="600" fill="#1e3a8a">GW: 172.16.50.1</text>
+              <text x="570" y="168" font-size="10.5" fill="#3b82f6">255.255.255.128 (/25)</text>
+
+              <!-- Subinterfaz Gi0/0.20 (Ejemplo) -->
+              <rect x="720" y="118" width="150" height="64" rx="7" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.2" />
+              <text x="730" y="135" font-size="11.5" font-weight="800" fill="#065f46">Gi0/0.20 · dot1Q 20</text>
+              <text x="730" y="152" font-size="11" font-weight="600" fill="#064e3b">GW: 172.16.50.129</text>
+              <text x="730" y="168" font-size="10.5" fill="#10b981">255.255.255.192 (/26)</text>
+            </g>
+
+            <!-- HOSTS DE ADMINISTRACIÓN (VLAN 10 - Ejemplo) -->
+            <!-- ADM1 -->
+            <g filter="url(#cardShadow)">
+              <rect x="45" y="320" width="160" height="122" rx="9" fill="#ffffff" stroke="#2563eb" stroke-width="1.8" />
+              <rect x="45" y="320" width="160" height="28" rx="7" fill="#2563eb" />
+              <text x="125" y="339" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">PC ADM1</text>
+              <text x="57" y="367" font-size="11" font-weight="700" fill="#1e293b">IP: <tspan fill="#2563eb">172.16.50.2</tspan></text>
+              <text x="57" y="385" font-size="10.5" fill="#475569">Másc: 255.255.255.128</text>
+              <text x="57" y="403" font-size="10.5" fill="#475569">GW: 172.16.50.1</text>
+              <line x1="57" y1="413" x2="193" y2="413" stroke="#e2e8f0" stroke-width="1" />
+              <text x="125" y="430" font-size="10.5" font-weight="700" fill="#1d4ed8" text-anchor="middle">Fa0 → S1 Fa0/1</text>
+            </g>
+
+            <!-- ADM2 -->
+            <g filter="url(#cardShadow)">
+              <rect x="255" y="320" width="160" height="122" rx="9" fill="#ffffff" stroke="#2563eb" stroke-width="1.8" />
+              <rect x="255" y="320" width="160" height="28" rx="7" fill="#2563eb" />
+              <text x="335" y="339" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">PC ADM2</text>
+              <text x="267" y="367" font-size="11" font-weight="700" fill="#1e293b">IP: <tspan fill="#2563eb">172.16.50.3</tspan></text>
+              <text x="267" y="385" font-size="10.5" fill="#475569">Másc: 255.255.255.128</text>
+              <text x="267" y="403" font-size="10.5" fill="#475569">GW: 172.16.50.1</text>
+              <line x1="267" y1="413" x2="403" y2="413" stroke="#e2e8f0" stroke-width="1" />
+              <text x="335" y="430" font-size="10.5" font-weight="700" fill="#1d4ed8" text-anchor="middle">Fa0 → S1 Fa0/2</text>
+            </g>
+
+            <!-- HOSTS DE OPERACIONES (VLAN 20 - Ejemplo) -->
+            <!-- OPE1 -->
+            <g filter="url(#cardShadow)">
+              <rect x="505" y="320" width="160" height="122" rx="9" fill="#ffffff" stroke="#059669" stroke-width="1.8" />
+              <rect x="505" y="320" width="160" height="28" rx="7" fill="#059669" />
+              <text x="585" y="339" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">PC OPE1</text>
+              <text x="517" y="367" font-size="11" font-weight="700" fill="#1e293b">IP: <tspan fill="#059669">172.16.50.130</tspan></text>
+              <text x="517" y="385" font-size="10.5" fill="#475569">Másc: 255.255.255.192</text>
+              <text x="517" y="403" font-size="10.5" fill="#475569">GW: 172.16.50.129</text>
+              <line x1="517" y1="413" x2="653" y2="413" stroke="#e2e8f0" stroke-width="1" />
+              <text x="585" y="430" font-size="10.5" font-weight="700" fill="#047857" text-anchor="middle">Fa0 → S1 Fa0/3</text>
+            </g>
+
+            <!-- OPE2 -->
+            <g filter="url(#cardShadow)">
+              <rect x="715" y="320" width="160" height="122" rx="9" fill="#ffffff" stroke="#059669" stroke-width="1.8" />
+              <rect x="715" y="320" width="160" height="28" rx="7" fill="#059669" />
+              <text x="795" y="339" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">PC OPE2</text>
+              <text x="727" y="367" font-size="11" font-weight="700" fill="#1e293b">IP: <tspan fill="#059669">172.16.50.131</tspan></text>
+              <text x="727" y="385" font-size="10.5" fill="#475569">Másc: 255.255.255.192</text>
+              <text x="727" y="403" font-size="10.5" fill="#475569">GW: 172.16.50.129</text>
+              <line x1="727" y1="413" x2="863" y2="413" stroke="#e2e8f0" stroke-width="1" />
+              <text x="795" y="430" font-size="10.5" font-weight="700" fill="#047857" text-anchor="middle">Fa0 → S1 Fa0/4</text>
+            </g>
+          </svg>
+          <figcaption>
+            <strong>Figura 1.</strong> Topología física y lógica de referencia (Router-on-a-Stick). Los puertos físicos (<code>Fa0/1–4</code> y <code>Gi0/1 ↔ Gi0/0</code>) coinciden con tu montaje; aplica las IP calculadas de tu bloque <code>192.168.10.0/24</code>.
+          </figcaption>
+        </figure>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Equipo</th><th scope="col">Interfaz del equipo</th><th scope="col">Conexión en S1</th><th scope="col">Función</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>ADM1</td><td>FastEthernet0</td><td>S1 Fa0/1</td><td>VLAN 10</td></tr>
+              <tr><td>ADM2</td><td>FastEthernet0</td><td>S1 Fa0/2</td><td>VLAN 10</td></tr>
+              <tr><td>OPE1</td><td>FastEthernet0</td><td>S1 Fa0/3</td><td>VLAN 20</td></tr>
+              <tr><td>OPE2</td><td>FastEthernet0</td><td>S1 Fa0/4</td><td>VLAN 20</td></tr>
+              <tr><td>R1</td><td>Gi0/0</td><td>S1 Gi0/1</td><td>Troncal VLAN 10 y 20</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Abre <strong>Desktop → IP Configuration</strong> en cada PC. Escribe su IP, máscara y gateway calculados. En laboratorio real usa la configuración IPv4 de la interfaz Ethernet del sistema operativo y consulta el resultado con <code>ipconfig /all</code> en Windows o <code>ip address</code> e <code>ip route</code> en Linux.</p>
+        <p>Completa una tarjeta por PC con los valores que realmente configuraste. Anota el puerto real incluso si coincide con el propuesto.</p>
+
+        <fieldset>
+          <legend>ADM1 · S1 Fa0/1 · VLAN 10</legend>
+          <div class="fields">
+            <label for="adm1-ip">IP asignada<input id="adm1-ip" data-field="adm1-ip" type="text" placeholder="Ej. 172.16.50.2"></label>
+            <label for="adm1-mask">Máscara<input id="adm1-mask" data-field="adm1-mask" type="text" placeholder="Usa la máscara del área"></label>
+            <label for="adm1-gateway">Gateway<input id="adm1-gateway" data-field="adm1-gateway" type="text" placeholder="IP de R1 en la misma subred"></label>
+            <label for="adm1-port">Puerto real del switch<input id="adm1-port" data-field="adm1-port" type="text" placeholder="Fa0/1"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>ADM2 · S1 Fa0/2 · VLAN 10</legend>
+          <div class="fields">
+            <label for="adm2-ip">IP asignada<input id="adm2-ip" data-field="adm2-ip" type="text" placeholder="Ej. 172.16.50.3"></label>
+            <label for="adm2-mask">Máscara<input id="adm2-mask" data-field="adm2-mask" type="text" placeholder="Usa la máscara del área"></label>
+            <label for="adm2-gateway">Gateway<input id="adm2-gateway" data-field="adm2-gateway" type="text" placeholder="IP de R1 en la misma subred"></label>
+            <label for="adm2-port">Puerto real del switch<input id="adm2-port" data-field="adm2-port" type="text" placeholder="Fa0/2"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>OPE1 · S1 Fa0/3 · VLAN 20</legend>
+          <div class="fields">
+            <label for="ope1-ip">IP asignada<input id="ope1-ip" data-field="ope1-ip" type="text" placeholder="Ej. 172.16.50.130"></label>
+            <label for="ope1-mask">Máscara<input id="ope1-mask" data-field="ope1-mask" type="text" placeholder="Usa la máscara del área"></label>
+            <label for="ope1-gateway">Gateway<input id="ope1-gateway" data-field="ope1-gateway" type="text" placeholder="IP de R1 en la misma subred"></label>
+            <label for="ope1-port">Puerto real del switch<input id="ope1-port" data-field="ope1-port" type="text" placeholder="Fa0/3"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>OPE2 · S1 Fa0/4 · VLAN 20</legend>
+          <div class="fields">
+            <label for="ope2-ip">IP asignada<input id="ope2-ip" data-field="ope2-ip" type="text" placeholder="Ej. 172.16.50.131"></label>
+            <label for="ope2-mask">Máscara<input id="ope2-mask" data-field="ope2-mask" type="text" placeholder="Usa la máscara del área"></label>
+            <label for="ope2-gateway">Gateway<input id="ope2-gateway" data-field="ope2-gateway" type="text" placeholder="IP de R1 en la misma subred"></label>
+            <label for="ope2-port">Puerto real del switch<input id="ope2-port" data-field="ope2-port" type="text" placeholder="Fa0/4"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Identificación de equipos activos</legend>
+          <div class="fields">
+            <label for="s1-model">Modelo de S1<input id="s1-model" data-field="s1-model" type="text" placeholder="2960"></label>
+            <label for="s1-version">Software y versión de S1<input id="s1-version" data-field="s1-version" type="text" placeholder="Dato de show version"></label>
+            <label for="r1-model">Modelo de R1<input id="r1-model" data-field="r1-model" type="text" placeholder="1941"></label>
+            <label for="r1-version">Software y versión de R1<input id="r1-version" data-field="r1-version" type="text" placeholder="Dato de show version"></label>
+          </div>
+        </fieldset>
+        <button type="button" id="check-pcs">Revisar direccionamiento de los PC</button>
+        <div id="pc-feedback" role="status" aria-live="polite"></div>
+        <div class="checkpoint"><strong>Comprueba antes de avanzar</strong><p>Confirma que cada IP es única, pertenece a la subred de su VLAN y tiene la misma máscara y gateway de su área.</p></div>
+      </section>
+
+      <section id="switch" class="lesson">
+        <h2>Configura S1 y verifica cada VLAN</h2>
+        <div class="badge-rol">Rotación de rol: Lidera quien configura conmutación en S1</div>
+        <p>En S1 abre <strong>CLI</strong> y pulsa Enter para acceder a la consola. <code>enable</code> abre el modo privilegiado y <code>configure terminal</code> permite cambiar la configuración. <code>exit</code> vuelve al nivel anterior y <code>end</code> regresa al modo privilegiado.</p>
+        <ol>
+          <li>Crea VLAN 10 y 20.</li>
+          <li>Asigna los dos PC de cada área a puertos de acceso de su VLAN.</li>
+          <li>Configura el enlace a R1 como troncal y permite VLAN 10 y 20.</li>
+          <li>Consulta el resultado y guarda la configuración. Al ejecutar <code>copy running-config startup-config</code>, confirma el nombre propuesto con Enter.</li>
+        </ol>
+        <h3>Secuencia de referencia para S1</h3>
+        <div class="command"><button type="button" class="copy">Copiar comandos</button><pre><code>enable
 configure terminal
 hostname S1
 vlan 10
@@ -195,9 +506,43 @@ switchport trunk allowed vlan 10,20
 end
 show vlan brief
 show interfaces trunk
-copy running-config startup-config</code></pre></div><div class="table-wrap"><table><thead><tr><th scope="col">Consulta</th><th scope="col">Dato que debes buscar</th><th scope="col">Resultado esperado</th></tr></thead><tbody><tr><td>show vlan brief</td><td>Puertos de acceso por VLAN</td><td>Fa0/1 y Fa0/2 en 10; Fa0/3 y Fa0/4 en 20.</td></tr><tr><td>show interfaces trunk</td><td>Puerto troncal y VLAN permitidas</td><td>Gi0/1 transporta VLAN 10 y 20 cuando el enlace esté activo.</td></tr><tr><td>show mac address-table</td><td>MAC, VLAN y puerto después de generar tráfico</td><td>Entradas que correspondan a los PC y sus conexiones.</td></tr></tbody></table></div><fieldset><legend>Resultado de la verificación de S1</legend><div class="fields"><label for="s1-vlans">Puertos observados por VLAN<textarea id="s1-vlans" data-field="s1-vlans" rows="3" placeholder="VLAN 10 = Fa0/1 y Fa0/2; VLAN 20 = Fa0/3 y Fa0/4"></textarea></label><label for="s1-trunk">Puerto troncal y VLAN permitidas<input id="s1-trunk" data-field="s1-trunk" type="text" placeholder="Gi0/1; VLAN 10 y 20"></label><label for="s1-mac">Una entrada MAC que puedas explicar<textarea id="s1-mac" data-field="s1-mac" rows="3" placeholder="MAC…, VLAN…, puerto…, PC asociado…"></textarea></label><label for="s1-evidence">Archivo de evidencia de las consultas<input id="s1-evidence" data-field="s1-evidence" type="text" placeholder="S1-consultas.png"></label></div></fieldset><p class="callout">Antes de configurar R1 deben comunicarse ADM1 con ADM2 y OPE1 con OPE2. El paso entre áreas todavía requiere el router. El troncal puede aparecer inactivo hasta habilitar Gi0/0 de R1. Si el primer eco se pierde durante el aprendizaje ARP, repite la serie y conserva el resultado final.</p></section><section id="router" class="lesson"><h2>Configura R1 y comprueba las rutas</h2>
-<p>Una sola conexión física a S1 transporta ambas VLAN. R1 utiliza una subinterfaz para cada VLAN. Su dirección IP será la puerta de enlace de los PC de esa subred.</p>
-<ol><li>En la consola de R1 habilita la interfaz física Gi0/0.</li><li>Crea Gi0/0.10 con etiqueta dot1Q 10 y Gi0/0.20 con etiqueta dot1Q 20.</li><li>Reemplaza los campos IP y MASCARA por tus cálculos antes de ejecutar las líneas <code>ip address</code>.</li><li>Comprueba direcciones, estados y rutas. Guarda la configuración.</li></ol><h3>Secuencia de referencia para R1</h3><div class="command"><button type="button" class="copy">Copiar comandos</button><pre><code>enable
+copy running-config startup-config</code></pre></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Consulta</th><th scope="col">Dato que debes buscar</th><th scope="col">Resultado esperado</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>show vlan brief</td><td>Puertos de acceso por VLAN</td><td>Fa0/1 y Fa0/2 en 10; Fa0/3 y Fa0/4 en 20.</td></tr>
+              <tr><td>show interfaces trunk</td><td>Puerto troncal y VLAN permitidas</td><td>Gi0/1 transporta VLAN 10 y 20 cuando el enlace esté activo.</td></tr>
+              <tr><td>show mac address-table</td><td>MAC, VLAN y puerto después de generar tráfico</td><td>Entradas que correspondan a los PC y sus conexiones.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <fieldset>
+          <legend>Resultado de la verificación de S1</legend>
+          <div class="fields">
+            <label for="s1-vlans">Puertos observados por VLAN<textarea id="s1-vlans" data-field="s1-vlans" rows="3" placeholder="VLAN 10 = Fa0/1 y Fa0/2; VLAN 20 = Fa0/3 y Fa0/4"></textarea></label>
+            <label for="s1-trunk">Puerto troncal y VLAN permitidas<input id="s1-trunk" data-field="s1-trunk" type="text" placeholder="Gi0/1; VLAN 10 y 20"></label>
+            <label for="s1-mac">Una entrada MAC que puedas explicar<textarea id="s1-mac" data-field="s1-mac" rows="3" placeholder="MAC…, VLAN…, puerto…, PC asociado…"></textarea></label>
+            <label for="s1-evidence">Archivo de evidencia de las consultas<input id="s1-evidence" data-field="s1-evidence" type="text" placeholder="S1-consultas.png"></label>
+          </div>
+        </fieldset>
+        <p class="callout">Antes de configurar R1 deben comunicarse ADM1 con ADM2 y OPE1 con OPE2. El paso entre áreas todavía requiere el router. El troncal puede aparecer inactivo hasta habilitar Gi0/0 de R1. Si el primer eco se pierde durante el aprendizaje ARP, repite la serie y conserva el resultado final.</p>
+      </section>
+
+      <section id="router" class="lesson">
+        <h2>Configura R1 y comprueba las rutas</h2>
+        <div class="badge-rol">Rotación de rol: Lidera quien configura enrutamiento en R1</div>
+        <p>Una sola conexión física a S1 transporta ambas VLAN. R1 utiliza una subinterfaz para cada VLAN. Su dirección IP será la puerta de enlace de los PC de esa subred.</p>
+        <ol>
+          <li>En la consola de R1 habilita la interfaz física Gi0/0.</li>
+          <li>Crea Gi0/0.10 con etiqueta dot1Q 10 y Gi0/0.20 con etiqueta dot1Q 20.</li>
+          <li>Reemplaza los campos IP y MASCARA por tus cálculos antes de ejecutar las líneas <code>ip address</code>.</li>
+          <li>Comprueba direcciones, estados y rutas. Guarda la configuración.</li>
+        </ol>
+        <h3>Secuencia de referencia para R1</h3>
+        <div class="command"><button type="button" class="copy">Copiar comandos</button><pre><code>enable
 configure terminal
 hostname R1
 interface gigabitEthernet 0/0
@@ -214,14 +559,235 @@ end
 show ip interface brief
 show ip route
 copy running-config startup-config</code></pre></div>
-<details><summary>Comprender las dos líneas de direccionamiento</summary><p>Para Gi0/0.10 se espera <code>ip address 192.168.10.1 255.255.255.192</code>. Para Gi0/0.20 se espera <code>ip address 192.168.10.65 255.255.255.224</code>. El ID de VLAN de <code>encapsulation dot1Q</code> debe coincidir con el transportado por S1.</p></details><div class="table-wrap"><table><thead><tr><th scope="col">Consulta</th><th scope="col">Resultado que se debe interpretar</th></tr></thead><tbody><tr><td>show ip interface brief</td><td>Gi0/0 y las subinterfaces operativas; direcciones .1 y .65 en las subinterfaces.</td></tr><tr><td>show ip route</td><td>Redes conectadas 192.168.10.0/26 y 192.168.10.64/27.</td></tr><tr><td>show ip arp</td><td>Relación IP–MAC de vecinos locales después de generar tráfico.</td></tr></tbody></table></div><fieldset><legend>Resultado de la verificación de R1</legend><div class="fields"><label for="r1-interfaces">IP y estado de las subinterfaces<textarea id="r1-interfaces" data-field="r1-interfaces" rows="3" placeholder="Gi0/0.10…, estado…; Gi0/0.20…, estado…"></textarea></label><label for="r1-routes">Redes conectadas observadas<textarea id="r1-routes" data-field="r1-routes" rows="3" placeholder="Red/prefijo → interfaz de salida"></textarea></label><label for="r1-arp">Una entrada ARP que puedas explicar<textarea id="r1-arp" data-field="r1-arp" rows="3" placeholder="IP…, MAC…, interfaz…, equipo asociado…"></textarea></label><label for="r1-evidence">Archivo de evidencia de las consultas<input id="r1-evidence" data-field="r1-evidence" type="text" placeholder="R1-consultas.png"></label></div></fieldset><div class="checkpoint"><strong>Comprueba antes de avanzar</strong><p>Relaciona cada red de la tabla de rutas con una subinterfaz. Estas dos redes ya están directamente conectadas a R1.</p></div></section><section id="pruebas" class="lesson"><h2>Registra las pruebas con datos verificables</h2>
-<p>Ejecuta cada prueba desde el PC que indica la tabla. En Packet Tracer abre <strong>Desktop → Command Prompt</strong>. Usa <code>ping IP_DESTINO</code>. Si la primera serie se ve afectada por ARP, vuelve a ejecutar y registra la serie final de cuatro ecos. En Windows real usa <code>ping -n 4 IP_DESTINO</code>.</p><div class="table-wrap"><table><thead><tr><th scope="col">Prueba</th><th scope="col">Origen → destino</th><th scope="col">Qué verifica</th></tr></thead><tbody><tr><td>P1</td><td>ADM1 → Gateway Administración</td><td>Acceso de VLAN 10 al router</td></tr><tr><td>P2</td><td>OPE1 → Gateway Operaciones</td><td>Acceso de VLAN 20 al router</td></tr><tr><td>P3</td><td>ADM1 → ADM2</td><td>Comunicación dentro de VLAN 10</td></tr><tr><td>P4</td><td>OPE1 → OPE2</td><td>Comunicación dentro de VLAN 20</td></tr><tr><td>P5</td><td>ADM1 → OPE1</td><td>Comunicación entre VLAN</td></tr><tr><td>P6</td><td>OPE2 → ADM2</td><td>Comunicación entre VLAN en sentido contrario</td></tr></tbody></table></div><details><summary>Ejemplo de un registro completo</summary><p>P1, origen 192.168.10.2, destino 192.168.10.1, comando <code>ping 192.168.10.1</code>, enviados 4, recibidos 4, evidencia P1-gateway.png. Conclusión «ADM1 alcanza su gateway en VLAN 10». Si recibes 0, conserva ese dato y describe el síntoma.</p></details><fieldset><legend>P1 · ADM1 → Gateway Administración</legend><p class="hint">Se espera respuesta de los cuatro ecos en la serie final. La IP de destino debe coincidir con la asignada en tu montaje.</p><div class="fields"><label for="p1-source">IP origen<input id="p1-source" data-field="p1-source" type="text" placeholder="Consulta la IP del PC origen"></label><label for="p1-destination">IP destino<input id="p1-destination" data-field="p1-destination" type="text" placeholder="192.168.10.1"></label><label for="p1-command">Comando ejecutado<input id="p1-command" data-field="p1-command" type="text" placeholder="ping 192.168.10.1"></label><label for="p1-sent">Ecos enviados<input id="p1-sent" data-field="p1-sent" type="number" min="0" step="1" placeholder="4"></label><label for="p1-received">Ecos recibidos<input id="p1-received" data-field="p1-received" type="number" min="0" step="1" placeholder="4"></label><label for="p1-evidence">Nombre del archivo de evidencia<input id="p1-evidence" data-field="p1-evidence" type="text" placeholder="P1-ping.png"></label><label for="p1-observation">Qué observaste y qué concluyes<textarea id="p1-observation" data-field="p1-observation" rows="3" placeholder="Ej. Responde el gateway; el PC alcanza la interfaz de R1."></textarea></label></div></fieldset><p class="test-status" id="p1-status" role="status">Pendiente de registro.</p><fieldset><legend>P2 · OPE1 → Gateway Operaciones</legend><p class="hint">Se espera respuesta de los cuatro ecos en la serie final. La IP de destino debe coincidir con la asignada en tu montaje.</p><div class="fields"><label for="p2-source">IP origen<input id="p2-source" data-field="p2-source" type="text" placeholder="Consulta la IP del PC origen"></label><label for="p2-destination">IP destino<input id="p2-destination" data-field="p2-destination" type="text" placeholder="192.168.10.65"></label><label for="p2-command">Comando ejecutado<input id="p2-command" data-field="p2-command" type="text" placeholder="ping 192.168.10.65"></label><label for="p2-sent">Ecos enviados<input id="p2-sent" data-field="p2-sent" type="number" min="0" step="1" placeholder="4"></label><label for="p2-received">Ecos recibidos<input id="p2-received" data-field="p2-received" type="number" min="0" step="1" placeholder="4"></label><label for="p2-evidence">Nombre del archivo de evidencia<input id="p2-evidence" data-field="p2-evidence" type="text" placeholder="P2-ping.png"></label><label for="p2-observation">Qué observaste y qué concluyes<textarea id="p2-observation" data-field="p2-observation" rows="3" placeholder="Ej. Responde el gateway; el PC alcanza la interfaz de R1."></textarea></label></div></fieldset><p class="test-status" id="p2-status" role="status">Pendiente de registro.</p><fieldset><legend>P3 · ADM1 → ADM2</legend><p class="hint">Se espera respuesta de los cuatro ecos en la serie final. La IP de destino debe coincidir con la asignada en tu montaje.</p><div class="fields"><label for="p3-source">IP origen<input id="p3-source" data-field="p3-source" type="text" placeholder="Consulta la IP del PC origen"></label><label for="p3-destination">IP destino<input id="p3-destination" data-field="p3-destination" type="text" placeholder="192.168.10.3"></label><label for="p3-command">Comando ejecutado<input id="p3-command" data-field="p3-command" type="text" placeholder="ping 192.168.10.3"></label><label for="p3-sent">Ecos enviados<input id="p3-sent" data-field="p3-sent" type="number" min="0" step="1" placeholder="4"></label><label for="p3-received">Ecos recibidos<input id="p3-received" data-field="p3-received" type="number" min="0" step="1" placeholder="4"></label><label for="p3-evidence">Nombre del archivo de evidencia<input id="p3-evidence" data-field="p3-evidence" type="text" placeholder="P3-ping.png"></label><label for="p3-observation">Qué observaste y qué concluyes<textarea id="p3-observation" data-field="p3-observation" rows="3" placeholder="Ej. Responde el gateway; el PC alcanza la interfaz de R1."></textarea></label></div></fieldset><p class="test-status" id="p3-status" role="status">Pendiente de registro.</p><fieldset><legend>P4 · OPE1 → OPE2</legend><p class="hint">Se espera respuesta de los cuatro ecos en la serie final. La IP de destino debe coincidir con la asignada en tu montaje.</p><div class="fields"><label for="p4-source">IP origen<input id="p4-source" data-field="p4-source" type="text" placeholder="Consulta la IP del PC origen"></label><label for="p4-destination">IP destino<input id="p4-destination" data-field="p4-destination" type="text" placeholder="192.168.10.67"></label><label for="p4-command">Comando ejecutado<input id="p4-command" data-field="p4-command" type="text" placeholder="ping 192.168.10.67"></label><label for="p4-sent">Ecos enviados<input id="p4-sent" data-field="p4-sent" type="number" min="0" step="1" placeholder="4"></label><label for="p4-received">Ecos recibidos<input id="p4-received" data-field="p4-received" type="number" min="0" step="1" placeholder="4"></label><label for="p4-evidence">Nombre del archivo de evidencia<input id="p4-evidence" data-field="p4-evidence" type="text" placeholder="P4-ping.png"></label><label for="p4-observation">Qué observaste y qué concluyes<textarea id="p4-observation" data-field="p4-observation" rows="3" placeholder="Ej. Responde el gateway; el PC alcanza la interfaz de R1."></textarea></label></div></fieldset><p class="test-status" id="p4-status" role="status">Pendiente de registro.</p><fieldset><legend>P5 · ADM1 → OPE1</legend><p class="hint">Se espera respuesta de los cuatro ecos en la serie final. La IP de destino debe coincidir con la asignada en tu montaje.</p><div class="fields"><label for="p5-source">IP origen<input id="p5-source" data-field="p5-source" type="text" placeholder="Consulta la IP del PC origen"></label><label for="p5-destination">IP destino<input id="p5-destination" data-field="p5-destination" type="text" placeholder="192.168.10.66"></label><label for="p5-command">Comando ejecutado<input id="p5-command" data-field="p5-command" type="text" placeholder="ping 192.168.10.66"></label><label for="p5-sent">Ecos enviados<input id="p5-sent" data-field="p5-sent" type="number" min="0" step="1" placeholder="4"></label><label for="p5-received">Ecos recibidos<input id="p5-received" data-field="p5-received" type="number" min="0" step="1" placeholder="4"></label><label for="p5-evidence">Nombre del archivo de evidencia<input id="p5-evidence" data-field="p5-evidence" type="text" placeholder="P5-ping.png"></label><label for="p5-observation">Qué observaste y qué concluyes<textarea id="p5-observation" data-field="p5-observation" rows="3" placeholder="Ej. Responde el gateway; el PC alcanza la interfaz de R1."></textarea></label></div></fieldset><p class="test-status" id="p5-status" role="status">Pendiente de registro.</p><fieldset><legend>P6 · OPE2 → ADM2</legend><p class="hint">Se espera respuesta de los cuatro ecos en la serie final. La IP de destino debe coincidir con la asignada en tu montaje.</p><div class="fields"><label for="p6-source">IP origen<input id="p6-source" data-field="p6-source" type="text" placeholder="Consulta la IP del PC origen"></label><label for="p6-destination">IP destino<input id="p6-destination" data-field="p6-destination" type="text" placeholder="192.168.10.3"></label><label for="p6-command">Comando ejecutado<input id="p6-command" data-field="p6-command" type="text" placeholder="ping 192.168.10.3"></label><label for="p6-sent">Ecos enviados<input id="p6-sent" data-field="p6-sent" type="number" min="0" step="1" placeholder="4"></label><label for="p6-received">Ecos recibidos<input id="p6-received" data-field="p6-received" type="number" min="0" step="1" placeholder="4"></label><label for="p6-evidence">Nombre del archivo de evidencia<input id="p6-evidence" data-field="p6-evidence" type="text" placeholder="P6-ping.png"></label><label for="p6-observation">Qué observaste y qué concluyes<textarea id="p6-observation" data-field="p6-observation" rows="3" placeholder="Ej. Responde el gateway; el PC alcanza la interfaz de R1."></textarea></label></div></fieldset><p class="test-status" id="p6-status" role="status">Pendiente de registro.</p><div class="checkpoint"><strong>Comprueba antes de avanzar</strong><p>Una captura debe mostrar el comando y su resultado. El archivo citado en la bitácora debe existir en tu carpeta de entrega.</p></div></section><section id="diagnostico" class="lesson"><h2>Investiga una falla y demuestra la recuperación</h2>
-<p>Guarda una copia funcional del montaje. En otra copia, una persona del equipo introduce una de las fallas de la tabla. Otra persona investiga a partir del síntoma. Rota los roles y contrasta la causa encontrada con el cambio que se introdujo.</p><div class="table-wrap"><table><thead><tr><th scope="col">Cambio en la copia</th><th scope="col">Qué puede observarse</th><th scope="col">Por dónde empezar</th></tr></thead><tbody><tr><td>Gateway incorrecto en OPE1</td><td>Puede conservar comunicación local y fallar al responder a otra subred.</td><td>Compara gateway con el diseño y prueba local e inter-VLAN.</td></tr><tr><td>Fa0/3 asignado a VLAN 10</td><td>OPE1 puede perder acceso a su gateway y a OPE2.</td><td>Comprueba show vlan brief y el cableado.</td></tr><tr><td>Máscara /24 en OPE1</td><td>Puede intentar resolver por ARP un destino que debería alcanzar mediante R1.</td><td>Compara máscara y realiza una prueba hacia Administración.</td></tr></tbody></table></div><p>Las respuestas pueden variar por el comportamiento del entorno, incluido proxy ARP. Confirma la discrepancia de configuración y su efecto con evidencias. Guarda una prueba anterior, cambia un parámetro, repite el mismo trayecto y comprueba otro que ya funcionaba.</p><fieldset><legend>Ficha de incidente</legend><div class="fields"><label for="inc-symptom">Síntoma y alcance<textarea id="inc-symptom" data-field="inc-symptom" rows="3" placeholder="Qué PC, destino y servicio fallan; qué todavía funciona."></textarea></label><label for="inc-hypothesis-a">Hipótesis A<textarea id="inc-hypothesis-a" data-field="inc-hypothesis-a" rows="3" placeholder="Qué podría explicar el síntoma."></textarea></label><label for="inc-hypothesis-b">Hipótesis B<textarea id="inc-hypothesis-b" data-field="inc-hypothesis-b" rows="3" placeholder="Otra causa posible."></textarea></label><label for="inc-test">Prueba que distingue las hipótesis<textarea id="inc-test" data-field="inc-test" rows="3" placeholder="Comando, equipo y dato que esperas encontrar."></textarea></label><label for="inc-expected">Valor esperado según el diseño<input id="inc-expected" data-field="inc-expected" type="text" placeholder="Ej. Fa0/3 pertenece a VLAN 20"></label><label for="inc-observed">Valor observado antes del cambio<input id="inc-observed" data-field="inc-observed" type="text" placeholder="Ej. Fa0/3 aparece en VLAN 10"></label><label for="inc-cause">Causa sustentada<textarea id="inc-cause" data-field="inc-cause" rows="3" placeholder="Relaciona la diferencia con el síntoma."></textarea></label><label for="inc-change">Ajuste realizado<textarea id="inc-change" data-field="inc-change" rows="3" placeholder="Parámetro, valor anterior y valor nuevo."></textarea></label><label for="inc-before">Prueba antes del ajuste<textarea id="inc-before" data-field="inc-before" rows="3" placeholder="Origen, destino, enviados/recibidos y evidencia."></textarea></label><label for="inc-after">Misma prueba después del ajuste<textarea id="inc-after" data-field="inc-after" rows="3" placeholder="Repite origen, destino y parámetros; cita la evidencia."></textarea></label><label for="inc-regression">Prueba de regresión<textarea id="inc-regression" data-field="inc-regression" rows="3" placeholder="Otro trayecto que funcionaba; resultado y evidencia."></textarea></label><label for="inc-final">Estado final<select id="inc-final" data-field="inc-final"><option value="">Selecciona una opción</option><option>Recuperado y comprobado</option><option>Falla parcialmente resuelta</option><option>Falla pendiente de resolver</option></select></label><label for="inc-next">Pendiente o siguiente comprobación<textarea id="inc-next" data-field="inc-next" rows="3" placeholder="Explica lo que falta o indica que no quedan pendientes."></textarea></label></div></fieldset></section><section id="real" class="lesson"><h2>Lleva el procedimiento a equipos reales</h2>
-<p>Conserva el diseño lógico. Adapta la parte física al modelo de router, switch y sistema operativo disponibles. Antes de aplicar cambios, identifica los puertos y guarda la configuración inicial para poder regresar a ella.</p><div class="table-wrap"><table><thead><tr><th scope="col">En el simulador</th><th scope="col">En equipos reales</th><th scope="col">Evidencia que debes conservar</th></tr></thead><tbody><tr><td>Eliges 2960 y 1941.</td><td>Lee etiquetas y consulta show version o su equivalente.</td><td>Modelo, versión y nombre real de las interfaces.</td></tr><tr><td>Conectas el cable en la pantalla.</td><td>Identifica los extremos, el puerto, el indicador de enlace y el estado operativo.</td><td>Mapa físico y estado de los puertos.</td></tr><tr><td>Abres CLI.</td><td>Accede por consola o por el método de administración disponible y autorizado.</td><td>Interfaz y método de acceso, sin registrar contraseñas.</td></tr><tr><td>Editas IP Configuration.</td><td>Configura IPv4 de la interfaz Ethernet y consulta sus valores en el sistema.</td><td>IP, máscara, gateway y nombre de interfaz.</td></tr><tr><td>Pruebas con ping.</td><td>Prueba gateway, mismo segmento y otro segmento; revisa también el servicio requerido.</td><td>Resultado por trayecto y servicio.</td></tr><tr><td>Guardas .pkt.</td><td>Guarda configuraciones y archivos de evidencia identificados.</td><td>Respaldo inicial, final y bitácora.</td></tr></tbody></table></div><details class="reflection"><summary>El switch real muestra Gi1/0/3 en lugar de Fa0/3. ¿Qué adaptas?</summary><p>Relaciona el puerto físico con el diagrama. Ajusta el comando de interfaz y registra el nombre real; conserva la VLAN que corresponde al PC.</p><label for="real-interface">Tu explicación<textarea id="real-interface" data-field="real-interface" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details><details class="reflection"><summary>El enlace está activo y las IP son correctas, pero ping falla. ¿Qué comprobarías?</summary><p>Verifica VLAN, gateway, ruta, retorno y políticas ICMP del destino. Un servicio puede comportarse diferente; registra qué prueba ejecutaste.</p><label for="real-firewall">Tu explicación<textarea id="real-firewall" data-field="real-firewall" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details><details class="reflection"><summary>La red responde a ping. ¿Qué harías para comprobar que soporta a todos los usuarios?</summary><p>Define requisitos de disponibilidad, rendimiento y calidad y prepara mediciones comparables. Esto continúa en el proyecto del RA 4.</p><label for="real-capacity">Tu explicación<textarea id="real-capacity" data-field="real-capacity" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details></section><section id="repaso" class="lesson"><h2>Preguntas para comprender tus decisiones</h2><p>Elige una respuesta. Cada pregunta explica cómo usar el concepto en tu montaje. Puedes volver a intentarlo.</p><div id="quiz"></div></section><section id="bitacora" class="lesson"><h2>Revisa y descarga tu bitácora</h2>
-<p>La bitácora reúne los campos de todas las actividades. Revisa los pendientes antes de descargar. Puedes exportar un informe legible o un respaldo JSON para continuar en este u otro navegador.</p>
-<button type="button" id="review">Revisar campos pendientes</button><div id="review-result" role="status" aria-live="polite"></div>
-<div class="export-actions"><button type="button" id="download">Descargar informe Markdown</button><button type="button" id="backup" class="secondary">Guardar respaldo JSON</button><button type="button" id="print" class="secondary">Imprimir bitácora</button></div>
-<label for="restore">Continuar desde un respaldo JSON<input id="restore" type="file" accept=".json,application/json"></label>
-<p>Al cargar un respaldo se reemplazan los datos actuales. Descarga primero una copia si necesitas conservarlos.</p>
-<div id="import-preview" hidden></div>
-<p id="transfer-status" role="status"></p><details id="legacy-block" hidden><summary>Registros de la versión anterior</summary><p>Estos apuntes se conservaron como referencia. Distribuye su información en los campos de la nueva bitácora.</p><pre id="legacy"></pre></details></section><footer>RA 4 · Verificar el funcionamiento de los equipos activos de interconexión, de acuerdo con los requerimientos establecidos.</footer></main></div></body></html>
+        <details><summary>Comprender las dos líneas de direccionamiento</summary><p>Para Gi0/0.10 debes usar el primer host utilizable y la máscara /26 de Administración. Para Gi0/0.20 debes usar el primer host utilizable y la máscara /27 de Operaciones. El ID de VLAN de <code>encapsulation dot1Q</code> debe coincidir con el transportado por S1.</p></details>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Consulta</th><th scope="col">Resultado que se debe interpretar</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>show ip interface brief</td><td>Gi0/0 y las subinterfaces operativas con sus respectivas direcciones gateway.</td></tr>
+              <tr><td>show ip route</td><td>Dos redes directamente conectadas (C) correspondientes a Administración y Operaciones.</td></tr>
+              <tr><td>show ip arp</td><td>Relación IP–MAC de vecinos locales después de generar tráfico.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <fieldset>
+          <legend>Resultado de la verificación de R1</legend>
+          <div class="fields">
+            <label for="r1-interfaces">IP y estado de las subinterfaces<textarea id="r1-interfaces" data-field="r1-interfaces" rows="3" placeholder="Gi0/0.10…, estado…; Gi0/0.20…, estado…"></textarea></label>
+            <label for="r1-routes">Redes conectadas observadas<textarea id="r1-routes" data-field="r1-routes" rows="3" placeholder="Red/prefijo → interfaz de salida"></textarea></label>
+            <label for="r1-arp">Una entrada ARP que puedas explicar<textarea id="r1-arp" data-field="r1-arp" rows="3" placeholder="IP…, MAC…, interfaz…, equipo asociado…"></textarea></label>
+            <label for="r1-evidence">Archivo de evidencia de las consultas<input id="r1-evidence" data-field="r1-evidence" type="text" placeholder="R1-consultas.png"></label>
+          </div>
+        </fieldset>
+        <div class="checkpoint"><strong>Comprueba antes de avanzar</strong><p>Relaciona cada red de la tabla de rutas con una subinterfaz. Estas dos redes ya están directamente conectadas a R1.</p></div>
+      </section>
+
+      <section id="pruebas" class="lesson">
+        <h2>Registra las pruebas con datos verificables</h2>
+        <div class="badge-rol">Rotación de rol: Lidera quien ejecuta pruebas ICMP y captura evidencias</div>
+        <p>Ejecuta cada prueba desde el PC que indica la tabla. En Packet Tracer abre <strong>Desktop → Command Prompt</strong>. Usa <code>ping IP_DESTINO</code>. Si la primera serie se ve afectada por ARP, vuelve a ejecutar y registra la serie final de cuatro ecos. En Windows real usa <code>ping -n 4 IP_DESTINO</code>.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Prueba</th><th scope="col">Origen → destino</th><th scope="col">Qué verifica</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>P1</td><td>ADM1 → Gateway Administración</td><td>Acceso de VLAN 10 al router</td></tr>
+              <tr><td>P2</td><td>OPE1 → Gateway Operaciones</td><td>Acceso de VLAN 20 al router</td></tr>
+              <tr><td>P3</td><td>ADM1 → ADM2</td><td>Comunicación dentro de VLAN 10</td></tr>
+              <tr><td>P4</td><td>OPE1 → OPE2</td><td>Comunicación dentro de VLAN 20</td></tr>
+              <tr><td>P5</td><td>ADM1 → OPE1</td><td>Comunicación entre VLAN</td></tr>
+              <tr><td>P6</td><td>OPE2 → ADM2</td><td>Comunicación entre VLAN en sentido contrario</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <details><summary>Ejemplo de un registro completo (con bloque de referencia)</summary><p>P1, origen 172.16.50.2, destino 172.16.50.1, comando <code>ping 172.16.50.1</code>, enviados 4, recibidos 4, evidencia P1-gateway.png. Conclusión «ADM1 alcanza su gateway en VLAN 10». Si recibes 0, conserva ese dato y describe el síntoma.</p></details>
+
+        <fieldset>
+          <legend>P1 · ADM1 → Gateway Administración</legend>
+          <p class="hint">Se espera respuesta de los cuatro ecos en la serie final. La IP de destino debe coincidir con la asignada en tu montaje.</p>
+          <div class="fields">
+            <label for="p1-source">IP origen<input id="p1-source" data-field="p1-source" type="text" placeholder="IP de ADM1 en tu montaje"></label>
+            <label for="p1-destination">IP destino<input id="p1-destination" data-field="p1-destination" type="text" placeholder="Gateway VLAN 10"></label>
+            <label for="p1-command">Comando ejecutado<input id="p1-command" data-field="p1-command" type="text" placeholder="ping [IP_DESTINO]"></label>
+            <label for="p1-sent">Ecos enviados<input id="p1-sent" data-field="p1-sent" type="number" min="0" step="1" placeholder="4"></label>
+            <label for="p1-received">Ecos recibidos<input id="p1-received" data-field="p1-received" type="number" min="0" step="1" placeholder="4"></label>
+            <label for="p1-evidence">Nombre del archivo de evidencia<input id="p1-evidence" data-field="p1-evidence" type="text" placeholder="P1-ping.png"></label>
+            <label for="p1-observation">Qué observaste y qué concluyes<textarea id="p1-observation" data-field="p1-observation" rows="3" placeholder="Ej. Responde el gateway; el PC alcanza la interfaz de R1."></textarea></label>
+          </div>
+        </fieldset>
+        <p class="test-status" id="p1-status" role="status">Pendiente de registro.</p>
+
+        <fieldset>
+          <legend>P2 · OPE1 → Gateway Operaciones</legend>
+          <p class="hint">Se espera respuesta de los cuatro ecos en la serie final. La IP de destino debe coincidir con la asignada en tu montaje.</p>
+          <div class="fields">
+            <label for="p2-source">IP origen<input id="p2-source" data-field="p2-source" type="text" placeholder="IP de OPE1 en tu montaje"></label>
+            <label for="p2-destination">IP destino<input id="p2-destination" data-field="p2-destination" type="text" placeholder="Gateway VLAN 20"></label>
+            <label for="p2-command">Comando ejecutado<input id="p2-command" data-field="p2-command" type="text" placeholder="ping [IP_DESTINO]"></label>
+            <label for="p2-sent">Ecos enviados<input id="p2-sent" data-field="p2-sent" type="number" min="0" step="1" placeholder="4"></label>
+            <label for="p2-received">Ecos recibidos<input id="p2-received" data-field="p2-received" type="number" min="0" step="1" placeholder="4"></label>
+            <label for="p2-evidence">Nombre del archivo de evidencia<input id="p2-evidence" data-field="p2-evidence" type="text" placeholder="P2-ping.png"></label>
+            <label for="p2-observation">Qué observaste y qué concluyes<textarea id="p2-observation" data-field="p2-observation" rows="3" placeholder="Ej. Responde el gateway; el PC alcanza la interfaz de R1."></textarea></label>
+          </div>
+        </fieldset>
+        <p class="test-status" id="p2-status" role="status">Pendiente de registro.</p>
+
+        <fieldset>
+          <legend>P3 · ADM1 → ADM2</legend>
+          <p class="hint">Se espera respuesta de los cuatro ecos en la serie final. La IP de destino debe coincidir con la asignada en tu montaje.</p>
+          <div class="fields">
+            <label for="p3-source">IP origen<input id="p3-source" data-field="p3-source" type="text" placeholder="IP de ADM1 en tu montaje"></label>
+            <label for="p3-destination">IP destino<input id="p3-destination" data-field="p3-destination" type="text" placeholder="IP de ADM2 en tu montaje"></label>
+            <label for="p3-command">Comando ejecutado<input id="p3-command" data-field="p3-command" type="text" placeholder="ping [IP_DESTINO]"></label>
+            <label for="p3-sent">Ecos enviados<input id="p3-sent" data-field="p3-sent" type="number" min="0" step="1" placeholder="4"></label>
+            <label for="p3-received">Ecos recibidos<input id="p3-received" data-field="p3-received" type="number" min="0" step="1" placeholder="4"></label>
+            <label for="p3-evidence">Nombre del archivo de evidencia<input id="p3-evidence" data-field="p3-evidence" type="text" placeholder="P3-ping.png"></label>
+            <label for="p3-observation">Qué observaste y qué concluyes<textarea id="p3-observation" data-field="p3-observation" rows="3" placeholder="Ej. Comunicación directa en capa 2 dentro de VLAN 10."></textarea></label>
+          </div>
+        </fieldset>
+        <p class="test-status" id="p3-status" role="status">Pendiente de registro.</p>
+
+        <fieldset>
+          <legend>P4 · OPE1 → OPE2</legend>
+          <p class="hint">Se espera respuesta de los cuatro ecos en la serie final. La IP de destino debe coincidir con la asignada en tu montaje.</p>
+          <div class="fields">
+            <label for="p4-source">IP origen<input id="p4-source" data-field="p4-source" type="text" placeholder="IP de OPE1 en tu montaje"></label>
+            <label for="p4-destination">IP destino<input id="p4-destination" data-field="p4-destination" type="text" placeholder="IP de OPE2 en tu montaje"></label>
+            <label for="p4-command">Comando ejecutado<input id="p4-command" data-field="p4-command" type="text" placeholder="ping [IP_DESTINO]"></label>
+            <label for="p4-sent">Ecos enviados<input id="p4-sent" data-field="p4-sent" type="number" min="0" step="1" placeholder="4"></label>
+            <label for="p4-received">Ecos recibidos<input id="p4-received" data-field="p4-received" type="number" min="0" step="1" placeholder="4"></label>
+            <label for="p4-evidence">Nombre del archivo de evidencia<input id="p4-evidence" data-field="p4-evidence" type="text" placeholder="P4-ping.png"></label>
+            <label for="p4-observation">Qué observaste y qué concluyes<textarea id="p4-observation" data-field="p4-observation" rows="3" placeholder="Ej. Comunicación directa en capa 2 dentro de VLAN 20."></textarea></label>
+          </div>
+        </fieldset>
+        <p class="test-status" id="p4-status" role="status">Pendiente de registro.</p>
+
+        <fieldset>
+          <legend>P5 · ADM1 → OPE1</legend>
+          <p class="hint">Se espera respuesta de los cuatro ecos en la serie final. La IP de destino debe coincidir con la asignada en tu montaje.</p>
+          <div class="fields">
+            <label for="p5-source">IP origen<input id="p5-source" data-field="p5-source" type="text" placeholder="IP de ADM1 en tu montaje"></label>
+            <label for="p5-destination">IP destino<input id="p5-destination" data-field="p5-destination" type="text" placeholder="IP de OPE1 en tu montaje"></label>
+            <label for="p5-command">Comando ejecutado<input id="p5-command" data-field="p5-command" type="text" placeholder="ping [IP_DESTINO]"></label>
+            <label for="p5-sent">Ecos enviados<input id="p5-sent" data-field="p5-sent" type="number" min="0" step="1" placeholder="4"></label>
+            <label for="p5-received">Ecos recibidos<input id="p5-received" data-field="p5-received" type="number" min="0" step="1" placeholder="4"></label>
+            <label for="p5-evidence">Nombre del archivo de evidencia<input id="p5-evidence" data-field="p5-evidence" type="text" placeholder="P5-ping.png"></label>
+            <label for="p5-observation">Qué observaste y qué concluyes<textarea id="p5-observation" data-field="p5-observation" rows="3" placeholder="Ej. Enrutamiento inter-VLAN operativo a través de R1."></textarea></label>
+          </div>
+        </fieldset>
+        <p class="test-status" id="p5-status" role="status">Pendiente de registro.</p>
+
+        <fieldset>
+          <legend>P6 · OPE2 → ADM2</legend>
+          <p class="hint">Se espera respuesta de los cuatro ecos en la serie final. La IP de destino debe coincidir con la asignada en tu montaje.</p>
+          <div class="fields">
+            <label for="p6-source">IP origen<input id="p6-source" data-field="p6-source" type="text" placeholder="IP de OPE2 en tu montaje"></label>
+            <label for="p6-destination">IP destino<input id="p6-destination" data-field="p6-destination" type="text" placeholder="IP de ADM2 en tu montaje"></label>
+            <label for="p6-command">Comando ejecutado<input id="p6-command" data-field="p6-command" type="text" placeholder="ping [IP_DESTINO]"></label>
+            <label for="p6-sent">Ecos enviados<input id="p6-sent" data-field="p6-sent" type="number" min="0" step="1" placeholder="4"></label>
+            <label for="p6-received">Ecos recibidos<input id="p6-received" data-field="p6-received" type="number" min="0" step="1" placeholder="4"></label>
+            <label for="p6-evidence">Nombre del archivo de evidencia<input id="p6-evidence" data-field="p6-evidence" type="text" placeholder="P6-ping.png"></label>
+            <label for="p6-observation">Qué observaste y qué concluyes<textarea id="p6-observation" data-field="p6-observation" rows="3" placeholder="Ej. Retorno inter-VLAN verificado hacia Administración."></textarea></label>
+          </div>
+        </fieldset>
+        <p class="test-status" id="p6-status" role="status">Pendiente de registro.</p>
+        <div class="checkpoint"><strong>Comprueba antes de avanzar</strong><p>Una captura debe mostrar el comando y su resultado. El archivo citado en la bitácora debe existir en tu carpeta de entrega.</p></div>
+      </section>
+
+      <section id="diagnostico" class="lesson">
+        <h2>Investiga una falla y demuestra la recuperación</h2>
+        <div class="badge-rol">Rotación de rol: Saboteador controlado vs. Ingeniero de soporte</div>
+        <p>Guarda una copia funcional del montaje. En otra copia, una persona del equipo introduce una de las fallas de la tabla. Otra persona investiga a partir del síntoma sin mirar el cambio aplicado. Rota los roles y contrasta la causa encontrada con el cambio que se introdujo.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Cambio en la copia</th><th scope="col">Qué puede observarse</th><th scope="col">Por dónde empezar</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Gateway incorrecto en OPE1</td><td>Conserva comunicación local (OPE2) y falla al responder a otra subred (Administración).</td><td>Compara gateway con el diseño y prueba local e inter-VLAN.</td></tr>
+              <tr><td>Fa0/3 asignado a VLAN 10</td><td>OPE1 pierde acceso a su gateway (.65) y a OPE2.</td><td>Comprueba <code>show vlan brief</code> y el cableado.</td></tr>
+              <tr><td>Máscara /24 en OPE1</td><td>Intenta resolver por ARP un destino en Administración que debería alcanzar mediante R1.</td><td>Compara máscara con <code>ipconfig</code> y realiza una prueba hacia Administración.</td></tr>
+              <tr><td>Troncal Gi0/1 sin VLAN 20 permitida</td><td>Administración funciona completo, pero Operaciones queda incomunicado con su gateway y con VLAN 10.</td><td>Ejecuta <code>show interfaces trunk</code> en S1 y revisa la lista de VLAN permitidas.</td></tr>
+              <tr><td>Falta <code>encapsulation dot1Q 20</code> en R1</td><td>La subinterfaz Gi0/0.20 aparece en estado <code>administratively down</code> o sin protocolo activo.</td><td>Revisa <code>show ip interface brief</code> y <code>show running-config</code> en R1.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Las respuestas pueden variar por el comportamiento del entorno, incluido proxy ARP. Confirma la discrepancia de configuración y su efecto con evidencias. Guarda una prueba anterior, cambia un parámetro, repite el mismo trayecto y comprueba otro que ya funcionaba.</p>
+        <fieldset>
+          <legend>Ficha de incidente</legend>
+          <div class="fields">
+            <label for="inc-symptom">Síntoma y alcance<textarea id="inc-symptom" data-field="inc-symptom" rows="3" placeholder="Qué PC, destino y servicio fallan; qué todavía funciona."></textarea></label>
+            <label for="inc-hypothesis-a">Hipótesis A<textarea id="inc-hypothesis-a" data-field="inc-hypothesis-a" rows="3" placeholder="Qué podría explicar el síntoma."></textarea></label>
+            <label for="inc-hypothesis-b">Hipótesis B<textarea id="inc-hypothesis-b" data-field="inc-hypothesis-b" rows="3" placeholder="Otra causa posible."></textarea></label>
+            <label for="inc-test">Prueba que distingue las hipótesis<textarea id="inc-test" data-field="inc-test" rows="3" placeholder="Comando, equipo y dato que esperas encontrar."></textarea></label>
+            <label for="inc-expected">Valor esperado según el diseño<input id="inc-expected" data-field="inc-expected" type="text" placeholder="Ej. Fa0/3 pertenece a VLAN 20"></label>
+            <label for="inc-observed">Valor observado antes del cambio<input id="inc-observed" data-field="inc-observed" type="text" placeholder="Ej. Fa0/3 aparece en VLAN 10"></label>
+            <label for="inc-cause">Causa sustentada<textarea id="inc-cause" data-field="inc-cause" rows="3" placeholder="Relaciona la diferencia con el síntoma."></textarea></label>
+            <label for="inc-change">Ajuste realizado<textarea id="inc-change" data-field="inc-change" rows="3" placeholder="Parámetro, valor anterior y valor nuevo."></textarea></label>
+            <label for="inc-before">Prueba antes del ajuste<textarea id="inc-before" data-field="inc-before" rows="3" placeholder="Origen, destino, enviados/recibidos y evidencia."></textarea></label>
+            <label for="inc-after">Misma prueba después del ajuste<textarea id="inc-after" data-field="inc-after" rows="3" placeholder="Repite origen, destino y parámetros; cita la evidencia."></textarea></label>
+            <label for="inc-regression">Prueba de regresión<textarea id="inc-regression" data-field="inc-regression" rows="3" placeholder="Otro trayecto que funcionaba; resultado y evidencia."></textarea></label>
+            <label for="inc-final">Estado final<select id="inc-final" data-field="inc-final"><option value="">Selecciona una opción</option><option>Recuperado y comprobado</option><option>Falla parcialmente resuelta</option><option>Falla pendiente de resolver</option></select></label>
+            <label for="inc-next">Pendiente o siguiente comprobación<textarea id="inc-next" data-field="inc-next" rows="3" placeholder="Explica lo que falta o indica que no quedan pendientes."></textarea></label>
+          </div>
+        </fieldset>
+      </section>
+
+      <section id="real" class="lesson">
+        <h2>Lleva el procedimiento a equipos reales</h2>
+        <p>Conserva el diseño lógico. Adapta la parte física al modelo de router, switch y sistema operativo disponibles. Antes de aplicar cambios, identifica los puertos y guarda la configuración inicial para poder regresar a ella.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">En el simulador</th><th scope="col">En equipos reales</th><th scope="col">Evidencia que debes conservar</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Eliges 2960 y 1941.</td><td>Lee etiquetas y consulta <code>show version</code> o su equivalente.</td><td>Modelo, versión y nombre real de las interfaces.</td></tr>
+              <tr><td>Conectas el cable en la pantalla.</td><td>Identifica los extremos, el puerto, el indicador de enlace y el estado operativo.</td><td>Mapa físico y estado de los puertos.</td></tr>
+              <tr><td>Abres CLI.</td><td>Accede por consola o por el método de administración disponible y autorizado.</td><td>Interfaz y método de acceso, sin registrar contraseñas.</td></tr>
+              <tr><td>Editas IP Configuration.</td><td>Configura IPv4 de la interfaz Ethernet y consulta sus valores en el sistema.</td><td>IP, máscara, gateway y nombre de interfaz.</td></tr>
+              <tr><td>Pruebas con ping.</td><td>Prueba gateway, mismo segmento y otro segmento; revisa también el servicio requerido.</td><td>Resultado por trayecto y servicio.</td></tr>
+              <tr><td>Guardas .pkt.</td><td>Guarda configuraciones y archivos de evidencia identificados.</td><td>Respaldo inicial, final y bitácora.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <details class="reflection"><summary>El switch real muestra Gi1/0/3 en lugar de Fa0/3. ¿Qué adaptas?</summary><p>Relaciona el puerto físico con el diagrama. Ajusta el comando de interfaz y registra el nombre real; conserva la VLAN que corresponde al PC.</p><label for="real-interface">Tu explicación<textarea id="real-interface" data-field="real-interface" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details>
+        <details class="reflection"><summary>El enlace está activo y las IP son correctas, pero ping falla. ¿Qué comprobarías?</summary><p>Verifica VLAN, gateway, ruta, retorno y políticas ICMP del destino (como el Firewall de Windows Defender). Un servicio puede comportarse diferente; registra qué prueba ejecutaste.</p><label for="real-firewall">Tu explicación<textarea id="real-firewall" data-field="real-firewall" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details>
+        <details class="reflection"><summary>La red responde a ping. ¿Qué harías para comprobar que soporta a todos los usuarios?</summary><p>Define requisitos de disponibilidad, rendimiento y calidad y prepara mediciones comparables. Esto continúa en el proyecto del RA 4.</p><label for="real-capacity">Tu explicación<textarea id="real-capacity" data-field="real-capacity" rows="3" placeholder="Relaciona el concepto con una prueba de tu montaje."></textarea></label></details>
+      </section>
+
+      <section id="repaso" class="lesson">
+        <h2>Preguntas para comprender tus decisiones</h2>
+        <p>Elige una respuesta. Cada pregunta explica cómo usar el concepto en tu montaje. Puedes volver a intentarlo.</p>
+        <div id="quiz"></div>
+      </section>
+
+      <section id="bitacora" class="lesson">
+        <h2>Revisa y descarga tu bitácora</h2>
+        <p>La bitácora reúne los campos de todas las actividades. Revisa los pendientes antes de descargar. Puedes exportar un informe legible o un respaldo JSON para continuar en este u otro navegador.</p>
+        <button type="button" id="review">Revisar campos pendientes</button>
+        <div id="review-result" role="status" aria-live="polite"></div>
+        <div class="export-actions">
+          <button type="button" id="download">Descargar informe Markdown</button>
+          <button type="button" id="backup" class="secondary">Guardar respaldo JSON</button>
+          <button type="button" id="print" class="secondary">Imprimir bitácora</button>
+        </div>
+        <label for="restore">Continuar desde un respaldo JSON<input id="restore" type="file" accept=".json,application/json"></label>
+        <p>Al cargar un respaldo se reemplazan los datos actuales. Descarga primero una copia si necesitas conservarlos.</p>
+        <div id="import-preview" hidden></div>
+        <p id="transfer-status" role="status"></p>
+        <details id="legacy-block" hidden>
+          <summary>Registros de la versión anterior</summary>
+          <p>Estos apuntes se conservaron como referencia. Distribuye su información en los campos de la nueva bitácora.</p>
+          <pre id="legacy"></pre>
+        </details>
+      </section>
+
+      <footer>RA 4 · Verificar el funcionamiento de los equipos activos de interconexión, de acuerdo con los requerimientos establecidos.</footer>
+    </main>
+  </div>
+</body>
+</html>
