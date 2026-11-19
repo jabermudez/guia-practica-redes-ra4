@@ -15,7 +15,159 @@
 <ol><li>Encuentra h con <strong>2<sup>h</sup> − 2 ≥ hosts requeridos</strong>. Los dos valores reservados son la red y el broadcast.</li><li>Calcula el prefijo con 32 − h. Obtén la máscara decimal.</li><li>El tamaño del bloque es 2<sup>h</sup>. En este ejercicio los saltos están en el último octeto.</li><li>La red del siguiente bloque empieza inmediatamente después del broadcast anterior.</li><li>Reserva el primer host como gateway y los dos siguientes para los PC del área.</li></ol>
 <details><summary>Un ejemplo diferente para recordar el procedimiento</summary><p>Para 12 hosts, 2⁴ − 2 = 14. Se usa /28, máscara 255.255.255.240 y bloques de 16 direcciones. En 192.168.5.0/28, los hosts van de .1 a .14 y el broadcast es .15. El siguiente bloque empieza en .16.</p></details>
 <fieldset><legend>Administración · VLAN 10</legend><p class="hint">Requiere 50 direcciones utilizables. Escribe todas las direcciones IPv4 completas.</p><div class="fields"><label for="adm-h">Bits para hosts h<input id="adm-h" data-field="adm-h" type="number" min="0" step="1" placeholder="Ej. 4"></label><label for="adm-prefix">Prefijo CIDR<input id="adm-prefix" data-field="adm-prefix" type="text" placeholder="Ej. /28"></label><label for="adm-mask">Máscara decimal<input id="adm-mask" data-field="adm-mask" type="text" placeholder="Ej. 255.255.255.240"></label><label for="adm-network">Dirección de red<input id="adm-network" data-field="adm-network" type="text" placeholder="Ej. 192.168.10.0"></label><label for="adm-first">Primer host utilizable<input id="adm-first" data-field="adm-first" type="text" placeholder="Ej. 192.168.10.1"></label><label for="adm-last">Último host utilizable<input id="adm-last" data-field="adm-last" type="text" placeholder="Escribe la dirección completa"></label><label for="adm-broadcast">Broadcast<input id="adm-broadcast" data-field="adm-broadcast" type="text" placeholder="Escribe la dirección completa"></label><label for="adm-gateway">Gateway reservado<input id="adm-gateway" data-field="adm-gateway" type="text" placeholder="Usa el primer host del bloque"></label></div></fieldset><fieldset><legend>Operaciones · VLAN 20</legend><p class="hint">Requiere 25 direcciones utilizables. Escribe todas las direcciones IPv4 completas.</p><div class="fields"><label for="ope-h">Bits para hosts h<input id="ope-h" data-field="ope-h" type="number" min="0" step="1" placeholder="Ej. 4"></label><label for="ope-prefix">Prefijo CIDR<input id="ope-prefix" data-field="ope-prefix" type="text" placeholder="Ej. /28"></label><label for="ope-mask">Máscara decimal<input id="ope-mask" data-field="ope-mask" type="text" placeholder="Ej. 255.255.255.240"></label><label for="ope-network">Dirección de red<input id="ope-network" data-field="ope-network" type="text" placeholder="Ej. 192.168.10.0"></label><label for="ope-first">Primer host utilizable<input id="ope-first" data-field="ope-first" type="text" placeholder="Ej. 192.168.10.1"></label><label for="ope-last">Último host utilizable<input id="ope-last" data-field="ope-last" type="text" placeholder="Escribe la dirección completa"></label><label for="ope-broadcast">Broadcast<input id="ope-broadcast" data-field="ope-broadcast" type="text" placeholder="Escribe la dirección completa"></label><label for="ope-gateway">Gateway reservado<input id="ope-gateway" data-field="ope-gateway" type="text" placeholder="Usa el primer host del bloque"></label></div></fieldset><button type="button" id="check-subnets">Revisar mis cálculos</button><div id="subnet-feedback" role="status" aria-live="polite"></div>
-<details><summary>Contrastar con la solución después de intentarlo</summary><p>Administración usa 192.168.10.0/26, máscara 255.255.255.192, hosts .1 a .62, broadcast .63 y gateway .1. Operaciones usa 192.168.10.64/27, máscara 255.255.255.224, hosts .65 a .94, broadcast .95 y gateway .65. Todos los valores abreviados empiezan por 192.168.10.</p></details><div class="checkpoint"><strong>Comprueba antes de avanzar</strong><p>Explica por qué /27 admite Operaciones y resulta insuficiente para Administración. Revisa que ningún PC use una dirección de red o broadcast.</p></div></section><section id="montaje" class="lesson"><h2>Conecta los equipos y registra las IP</h2>
+<details><summary>Contrastar con la solución después de intentarlo</summary><p>Administración usa 192.168.10.0/26, máscara 255.255.255.192, hosts .1 a .62, broadcast .63 y gateway .1. Operaciones usa 192.168.10.64/27, máscara 255.255.255.224, hosts .65 a .94, broadcast .95 y gateway .65. Todos los valores abreviados empiezan por 192.168.10.</p></details><div class="checkpoint"><strong>Comprueba antes de avanzar</strong><p>Explica por qué /27 admite Operaciones y resulta insuficiente para Administración. Revisa que ningún PC use una dirección de red o broadcast.</p></div></section><section id="montaje" <figure class="topologia-diagrama" style="margin: 1.5rem 0; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 1rem; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);">
+  <svg viewBox="0 0 920 470" width="100%" height="auto" role="img" aria-labelledby="titulo-topologia desc-topologia" style="display: block; max-width: 100%; height: auto; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;">
+    <title id="titulo-topologia">Topología lógica y física: Red para Administración (VLAN 10) y Operaciones (VLAN 20)</title>
+    <desc id="desc-topologia">Diagrama de red con Router R1 conectado por enlace troncal 802.1Q al Switch S1, distribuyendo hacia ADM1 y ADM2 en VLAN 10, y OPE1 y OPE2 en VLAN 20.</desc>
+
+    <defs>
+      <!-- Sombra suave para nodos -->
+      <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="115%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.08" />
+      </filter>
+    </defs>
+
+    <!-- Fondo general -->
+    <rect x="0" y="0" width="920" height="470" rx="10" fill="#f8fafc" />
+
+    <!-- ZONAS DE VLAN (Contenedores de fondo) -->
+    <!-- Zona VLAN 10: Administración -->
+    <rect x="24" y="245" width="415" height="205" rx="12" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5" stroke-dasharray="6 4" />
+    <rect x="38" y="256" width="245" height="24" rx="6" fill="#dbeafe" />
+    <text x="48" y="272" font-size="12" font-weight="700" fill="#1e40af">VLAN 10 · ADMINISTRACIÓN (50 hosts)</text>
+    <text x="415" y="272" font-size="11.5" font-weight="600" fill="#2563eb" text-anchor="end">192.168.10.0/26</text>
+
+    <!-- Zona VLAN 20: Operaciones -->
+    <rect x="481" y="245" width="415" height="205" rx="12" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.5" stroke-dasharray="6 4" />
+    <rect x="495" y="256" width="235" height="24" rx="6" fill="#d1fae5" />
+    <text x="505" y="272" font-size="12" font-weight="700" fill="#065f46">VLAN 20 · OPERACIONES (25 hosts)</text>
+    <text x="872" y="272" font-size="11.5" font-weight="600" fill="#059669" text-anchor="end">192.168.10.64/27</text>
+
+    <!-- ENLACES DE RED (Cables) -->
+    <!-- Troncal S1 Gi0/1 <-> R1 Gi0/0 -->
+    <line x1="330" y1="125" x2="545" y2="125" stroke="#0f172a" stroke-width="4" />
+    <line x1="330" y1="125" x2="545" y2="125" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="8 5" />
+
+    <!-- Enlaces de acceso VLAN 10 -->
+    <polyline points="205,165 205,215 125,215 125,305" fill="none" stroke="#2563eb" stroke-width="2.5" />
+    <polyline points="235,165 235,215 335,215 335,305" fill="none" stroke="#2563eb" stroke-width="2.5" />
+
+    <!-- Enlaces de acceso VLAN 20 -->
+    <polyline points="265,165 265,205 585,205 585,305" fill="none" stroke="#059669" stroke-width="2.5" />
+    <polyline points="295,165 295,193 795,193 795,305" fill="none" stroke="#059669" stroke-width="2.5" />
+
+    <!-- ETIQUETAS DE PUERTOS E INTERFACES -->
+    <!-- Puertos Switch hacia PCs -->
+    <rect x="97" y="222" width="56" height="18" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1" />
+    <text x="125" y="234" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">Fa0/1</text>
+
+    <rect x="307" y="222" width="56" height="18" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1" />
+    <text x="335" y="234" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">Fa0/2</text>
+
+    <rect x="557" y="222" width="56" height="18" rx="4" fill="#ffffff" stroke="#6ee7b7" stroke-width="1" />
+    <text x="585" y="234" font-size="10.5" font-weight="700" fill="#065f46" text-anchor="middle">Fa0/3</text>
+
+    <rect x="767" y="222" width="56" height="18" rx="4" fill="#ffffff" stroke="#6ee7b7" stroke-width="1" />
+    <text x="795" y="234" font-size="10.5" font-weight="700" fill="#065f46" text-anchor="middle">Fa0/4</text>
+
+    <!-- Etiquetas Enlace Troncal -->
+    <rect x="338" y="102" width="44" height="18" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" />
+    <text x="360" y="114" font-size="10.5" font-weight="700" fill="#92400e" text-anchor="middle">Gi0/1</text>
+
+    <rect x="493" y="102" width="44" height="18" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" />
+    <text x="515" y="114" font-size="10.5" font-weight="700" fill="#92400e" text-anchor="middle">Gi0/0</text>
+
+    <rect x="383" y="133" width="110" height="20" rx="10" fill="#0f172a" />
+    <text x="438" y="146" font-size="10.5" font-weight="700" fill="#fbbf24" text-anchor="middle">TRUNK · 802.1Q</text>
+
+    <!-- DISPOSITIVO: SWITCH S1 (Cisco 2960) -->
+    <g filter="url(#cardShadow)">
+      <rect x="160" y="80" width="170" height="85" rx="10" fill="#1e293b" stroke="#0f172a" stroke-width="2" />
+      <!-- Icono Switch -->
+      <rect x="176" y="95" width="42" height="26" rx="4" fill="#334155" stroke="#64748b" stroke-width="1.2" />
+      <path d="M183 103 h14 l-3 -3 m3 3 l-3 3 M211 113 h-14 l3 -3 m-3 3 l3 3" stroke="#38bdf8" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+      <text x="230" y="110" font-size="15" font-weight="800" fill="#ffffff">Switch S1</text>
+      <text x="230" y="125" font-size="11" fill="#94a3b8">Cisco 2960 · Capa 2</text>
+      <line x1="175" y1="136" x2="315" y2="136" stroke="#334155" stroke-width="1" />
+      <text x="245" y="152" font-size="10.5" fill="#e2e8f0" text-anchor="middle">Acceso: Fa0/1–4 · Trunk: Gi0/1</text>
+    </g>
+
+    <!-- DISPOSITIVO: ROUTER R1 (Cisco 1941 - Router-on-a-Stick) -->
+    <g filter="url(#cardShadow)">
+      <rect x="545" y="55" width="340" height="125" rx="10" fill="#ffffff" stroke="#334155" stroke-width="2" />
+      <rect x="545" y="55" width="340" height="38" rx="8" fill="#0f172a" />
+      <!-- Icono Router -->
+      <circle cx="572" cy="74" r="12" fill="#334155" stroke="#38bdf8" stroke-width="1.5" />
+      <path d="M566 74 h12 M572 68 v12" stroke="#38bdf8" stroke-width="1.6" stroke-linecap="round" />
+      <text x="594" y="79" font-size="14.5" font-weight="800" fill="#ffffff">Router R1 (Cisco 1941 · Inter-VLAN)</text>
+
+      <!-- Subinterfaz Gi0/0.10 -->
+      <rect x="560" y="103" width="150" height="64" rx="7" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2" />
+      <text x="570" y="120" font-size="11.5" font-weight="800" fill="#1e40af">Gi0/0.10 · dot1Q 10</text>
+      <text x="570" y="137" font-size="11" font-weight="600" fill="#1e3a8a">GW: 192.168.10.1</text>
+      <text x="570" y="153" font-size="10.5" fill="#3b82f6">255.255.255.192 (/26)</text>
+
+      <!-- Subinterfaz Gi0/0.20 -->
+      <rect x="720" y="103" width="150" height="64" rx="7" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.2" />
+      <text x="730" y="120" font-size="11.5" font-weight="800" fill="#065f46">Gi0/0.20 · dot1Q 20</text>
+      <text x="730" y="137" font-size="11" font-weight="600" fill="#064e3b">GW: 192.168.10.65</text>
+      <text x="730" y="153" font-size="10.5" fill="#10b981">255.255.255.224 (/27)</text>
+    </g>
+
+    <!-- HOSTS DE ADMINISTRACIÓN (VLAN 10) -->
+    <!-- ADM1 -->
+    <g filter="url(#cardShadow)">
+      <rect x="45" y="305" width="160" height="122" rx="9" fill="#ffffff" stroke="#2563eb" stroke-width="1.8" />
+      <rect x="45" y="305" width="160" height="28" rx="7" fill="#2563eb" />
+      <text x="125" y="324" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">PC ADM1</text>
+      <text x="57" y="352" font-size="11" font-weight="700" fill="#1e293b">IP: <tspan fill="#2563eb">192.168.10.2</tspan></text>
+      <text x="57" y="370" font-size="10.5" fill="#475569">Másc: 255.255.255.192</text>
+      <text x="57" y="388" font-size="10.5" fill="#475569">GW: 192.168.10.1</text>
+      <line x1="57" y1="398" x2="193" y2="398" stroke="#e2e8f0" stroke-width="1" />
+      <text x="125" y="415" font-size="10.5" font-weight="700" fill="#1d4ed8" text-anchor="middle">Fa0 → S1 Fa0/1</text>
+    </g>
+
+    <!-- ADM2 -->
+    <g filter="url(#cardShadow)">
+      <rect x="255" y="305" width="160" height="122" rx="9" fill="#ffffff" stroke="#2563eb" stroke-width="1.8" />
+      <rect x="255" y="305" width="160" height="28" rx="7" fill="#2563eb" />
+      <text x="335" y="324" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">PC ADM2</text>
+      <text x="267" y="352" font-size="11" font-weight="700" fill="#1e293b">IP: <tspan fill="#2563eb">192.168.10.3</tspan></text>
+      <text x="267" y="370" font-size="10.5" fill="#475569">Másc: 255.255.255.192</text>
+      <text x="267" y="388" font-size="10.5" fill="#475569">GW: 192.168.10.1</text>
+      <line x1="267" y1="398" x2="403" y2="398" stroke="#e2e8f0" stroke-width="1" />
+      <text x="335" y="415" font-size="10.5" font-weight="700" fill="#1d4ed8" text-anchor="middle">Fa0 → S1 Fa0/2</text>
+    </g>
+
+    <!-- HOSTS DE OPERACIONES (VLAN 20) -->
+    <!-- OPE1 -->
+    <g filter="url(#cardShadow)">
+      <rect x="505" y="305" width="160" height="122" rx="9" fill="#ffffff" stroke="#059669" stroke-width="1.8" />
+      <rect x="505" y="305" width="160" height="28" rx="7" fill="#059669" />
+      <text x="585" y="324" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">PC OPE1</text>
+      <text x="517" y="352" font-size="11" font-weight="700" fill="#1e293b">IP: <tspan fill="#059669">192.168.10.66</tspan></text>
+      <text x="517" y="370" font-size="10.5" fill="#475569">Másc: 255.255.255.224</text>
+      <text x="517" y="388" font-size="10.5" fill="#475569">GW: 192.168.10.65</text>
+      <line x1="517" y1="398" x2="653" y2="398" stroke="#e2e8f0" stroke-width="1" />
+      <text x="585" y="415" font-size="10.5" font-weight="700" fill="#047857" text-anchor="middle">Fa0 → S1 Fa0/3</text>
+    </g>
+
+    <!-- OPE2 -->
+    <g filter="url(#cardShadow)">
+      <rect x="715" y="305" width="160" height="122" rx="9" fill="#ffffff" stroke="#059669" stroke-width="1.8" />
+      <rect x="715" y="305" width="160" height="28" rx="7" fill="#059669" />
+      <text x="795" y="324" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">PC OPE2</text>
+      <text x="727" y="352" font-size="11" font-weight="700" fill="#1e293b">IP: <tspan fill="#059669">192.168.10.67</tspan></text>
+      <text x="727" y="370" font-size="10.5" fill="#475569">Másc: 255.255.255.224</text>
+      <text x="727" y="388" font-size="10.5" fill="#475569">GW: 192.168.10.65</text>
+      <line x1="727" y1="398" x2="863" y2="398" stroke="#e2e8f0" stroke-width="1" />
+      <text x="795" y="415" font-size="10.5" font-weight="700" fill="#047857" text-anchor="middle">Fa0 → S1 Fa0/4</text>
+    </g>
+  </svg>
+  <figcaption style="margin-top: 0.65rem; font-size: 0.85rem; color: #475569; text-align: center;">
+    <strong>Figura 1.</strong> Topología física y lógica (Router-on-a-Stick) con segmentación VLAN 10 y VLAN 20 sobre el bloque <code>192.168.10.0/24</code>.
+  </figcaption>
+</figure> class="lesson"><h2>Conecta los equipos y registra las IP</h2>
 <p>Usa un switch 2960, un router 1941 y cuatro PC en Packet Tracer. Conecta con cable de cobre directo siguiendo esta tabla. En equipo físico, identifica el modelo y los nombres de interfaces antes de usar los comandos.</p><div class="table-wrap"><table><thead><tr><th scope="col">Equipo</th><th scope="col">Interfaz del equipo</th><th scope="col">Conexión en S1</th><th scope="col">Función</th></tr></thead><tbody><tr><td>ADM1</td><td>FastEthernet0</td><td>S1 Fa0/1</td><td>VLAN 10</td></tr><tr><td>ADM2</td><td>FastEthernet0</td><td>S1 Fa0/2</td><td>VLAN 10</td></tr><tr><td>OPE1</td><td>FastEthernet0</td><td>S1 Fa0/3</td><td>VLAN 20</td></tr><tr><td>OPE2</td><td>FastEthernet0</td><td>S1 Fa0/4</td><td>VLAN 20</td></tr><tr><td>R1</td><td>Gi0/0</td><td>S1 Gi0/1</td><td>Troncal VLAN 10 y 20</td></tr></tbody></table></div>
 <p>Abre <strong>Desktop → IP Configuration</strong> en cada PC. Escribe su IP, máscara y gateway calculados. En laboratorio real usa la configuración IPv4 de la interfaz Ethernet del sistema operativo y consulta el resultado con <code>ipconfig /all</code> en Windows o <code>ip address</code> e <code>ip route</code> en Linux.</p>
 <p>Completa una tarjeta por PC con los valores que realmente configuraste. Anota el puerto real incluso si coincide con el propuesto.</p><fieldset><legend>ADM1 · S1 Fa0/1 · VLAN 10</legend><div class="fields"><label for="adm1-ip">IP asignada<input id="adm1-ip" data-field="adm1-ip" type="text" placeholder="192.168.10.2"></label><label for="adm1-mask">Máscara<input id="adm1-mask" data-field="adm1-mask" type="text" placeholder="Usa la máscara del área"></label><label for="adm1-gateway">Gateway<input id="adm1-gateway" data-field="adm1-gateway" type="text" placeholder="IP de R1 en la misma subred"></label><label for="adm1-port">Puerto real del switch<input id="adm1-port" data-field="adm1-port" type="text" placeholder="Fa0/1"></label></div></fieldset><fieldset><legend>ADM2 · S1 Fa0/2 · VLAN 10</legend><div class="fields"><label for="adm2-ip">IP asignada<input id="adm2-ip" data-field="adm2-ip" type="text" placeholder="192.168.10.3"></label><label for="adm2-mask">Máscara<input id="adm2-mask" data-field="adm2-mask" type="text" placeholder="Usa la máscara del área"></label><label for="adm2-gateway">Gateway<input id="adm2-gateway" data-field="adm2-gateway" type="text" placeholder="IP de R1 en la misma subred"></label><label for="adm2-port">Puerto real del switch<input id="adm2-port" data-field="adm2-port" type="text" placeholder="Fa0/2"></label></div></fieldset><fieldset><legend>OPE1 · S1 Fa0/3 · VLAN 20</legend><div class="fields"><label for="ope1-ip">IP asignada<input id="ope1-ip" data-field="ope1-ip" type="text" placeholder="192.168.10.66"></label><label for="ope1-mask">Máscara<input id="ope1-mask" data-field="ope1-mask" type="text" placeholder="Usa la máscara del área"></label><label for="ope1-gateway">Gateway<input id="ope1-gateway" data-field="ope1-gateway" type="text" placeholder="IP de R1 en la misma subred"></label><label for="ope1-port">Puerto real del switch<input id="ope1-port" data-field="ope1-port" type="text" placeholder="Fa0/3"></label></div></fieldset><fieldset><legend>OPE2 · S1 Fa0/4 · VLAN 20</legend><div class="fields"><label for="ope2-ip">IP asignada<input id="ope2-ip" data-field="ope2-ip" type="text" placeholder="192.168.10.67"></label><label for="ope2-mask">Máscara<input id="ope2-mask" data-field="ope2-mask" type="text" placeholder="Usa la máscara del área"></label><label for="ope2-gateway">Gateway<input id="ope2-gateway" data-field="ope2-gateway" type="text" placeholder="IP de R1 en la misma subred"></label><label for="ope2-port">Puerto real del switch<input id="ope2-port" data-field="ope2-port" type="text" placeholder="Fa0/4"></label></div></fieldset><fieldset><legend>Identificación de equipos activos</legend><div class="fields"><label for="s1-model">Modelo de S1<input id="s1-model" data-field="s1-model" type="text" placeholder="2960"></label><label for="s1-version">Software y versión de S1<input id="s1-version" data-field="s1-version" type="text" placeholder="Dato de show version"></label><label for="r1-model">Modelo de R1<input id="r1-model" data-field="r1-model" type="text" placeholder="1941"></label><label for="r1-version">Software y versión de R1<input id="r1-version" data-field="r1-version" type="text" placeholder="Dato de show version"></label></div></fieldset><button type="button" id="check-pcs">Revisar direccionamiento de los PC</button><div id="pc-feedback" role="status" aria-live="polite"></div><div class="checkpoint"><strong>Comprueba antes de avanzar</strong><p>Confirma que cada IP es única, pertenece a la subred de su VLAN y tiene la misma máscara y gateway de su área.</p></div></section><section id="switch" class="lesson"><h2>Configura S1 y verifica cada VLAN</h2>
